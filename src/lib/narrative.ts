@@ -4,7 +4,7 @@ import type { PairResult } from './stats';
 import { fmtP, fr, strengthHe } from './stats';
 import { VAR, fmt } from './variables';
 
-export interface Narrative { headline: string; finding: string; meaning: string; caveats: string[]; action: string; domain?: string }
+export interface Narrative { headline: string; explain: string; finding: string; meaning: string; caveats: string[]; action: string; domain?: string }
 
 const DOMAIN: Record<string, string> = {
   'lst|ndvi': 'בספרות, עלייה של 0.1 ב-NDVI מלווה בדרך כלל בירידה של 1 עד 2 מעלות בטמפרטורת פני השטח (Weng et al., 2004). באשדוד הבריזה הימית חזקה מהצמחייה, ולכן כדאי לבחון את הקשר בשליטה על המרחק מהים.',
@@ -31,37 +31,41 @@ export function narrate(xKey: string, yKey: string, res: PairResult, controlKey?
   const dir = res.r > 0 ? 'חיובי' : 'שלילי';
   const sigS = res.pSpatial < 0.05, sigN = res.p < 0.05;
   const str = strengthHe(res.r);
+  // insight line: up to 8 words, says the point
   const headline = Math.abs(res.r) < 0.1
     ? `אין קשר בין ${X.short} ל${heb(Y.short)}`
     : `ככל ש${heb(X.short)} גבוה יותר, ${Y.short} ${res.r > 0 ? 'גבוה' : 'נמוך'} יותר`;
+  // one explanation sentence, up to 20 words, 2-3 bold terms, the verdict in the marker
+  const verdict = sigS ? '==מובהק גם אחרי תיקון מרחבי==' : sigN ? '==נעלם אחרי תיקון מרחבי==' : '==לא מובהק==';
+  const explain = `קשר **${dir} ${str}** על **${res.n}** יחידות, מתאם **${fr(res.r)}**: ${verdict}.`;
 
-  const finding = `קשר ${dir} ${str} (r = ${fr(res.r)}, Spearman ‏${fr(res.rho)}) על פני ${res.n} יחידות. ` +
-    (sigS ? `הוא מובהק גם אחרי תיקון לאוטוקורלציה מרחבית (p = ${fmtP(res.pSpatial)}).`
-      : sigN ? `בלי תיקון הוא נראה מובהק (p = ${fmtP(res.p)}), אבל אחרי תיקון לאוטוקורלציה מרחבית הוא כבר לא (p = ${fmtP(res.pSpatial)}). יחידות שכנות דומות זו לזו, ולכן יש פחות מידע בלתי תלוי ממה שנראה.`
-        : `הוא אינו מובהק (p = ${fmtP(res.pSpatial)} אחרי תיקון מרחבי).`);
+  const finding = `**Spearman ${fr(res.rho)}** מאשר את הכיוון. ` +
+    (sigS ? `**p מרחבי ${fmtP(res.pSpatial)}** אחרי תיקון לשכנים דומים.`
+      : sigN ? `בלי תיקון **p ${fmtP(res.p)}**, אחרי תיקון **${fmtP(res.pSpatial)}**: ==שכנים דומים מנפחים את המובהקות==.`
+        : `**p מרחבי ${fmtP(res.pSpatial)}**.`);
 
   const step = typicalStep(xKey);
-  const meaning = `בממוצע, כל ${fmt(step, xKey)} ${X.unit} נוספים של ${X.name} מלווים ב-${res.reg.slope * step >= 0 ? 'עלייה' : 'ירידה'} של ${fmt(Math.abs(res.reg.slope * step), yKey)} ${Y.unit} ב${Y.name}. ` +
-    `${X.name} מסביר כ-${Math.round(res.reg.r2 * 100)}% מהשונות ב${Y.name}.`;
+  const meaning = `כל **${fmt(step, xKey)} ${X.unit}** של ${X.name} מלווים ב${res.reg.slope * step >= 0 ? 'עלייה' : 'ירידה'} של **${fmt(Math.abs(res.reg.slope * step), yKey)} ${Y.unit}** ב${Y.name}. ` +
+    `${X.short} מסביר **${Math.round(res.reg.r2 * 100)}%** מהשונות.`;
 
   const caveats: string[] = [];
-  if (res.moranX > 0.3 && res.moranY > 0.3) caveats.push(`שני המשתנים מקובצים במרחב (Moran's I ‏${fr(res.moranX)} ו-${fr(res.moranY)}). לכן המדגם האפקטיבי הוא כ-${res.nEff.toFixed(0)} יחידות ולא ${res.n}.`);
-  if (Math.abs(res.r - res.rho) > 0.15) caveats.push(`Pearson ו-Spearman רחוקים זה מזה. כנראה שהקשר אינו ליניארי, או שכמה יחידות חריגות מושכות אותו.`);
-  if (res.jack.shift > 0.1) caveats.push(`יחידה אחת משנה את r ב-${fr(res.jack.shift)}. מומלץ לבדוק אותה במפה לפני מסקנה.`);
+  if (res.moranX > 0.3 && res.moranY > 0.3) caveats.push(`**מקובצים במרחב** (Moran's I ${fr(res.moranX)} ו-${fr(res.moranY)}): מדגם אפקטיבי **${res.nEff.toFixed(0)}** ולא ${res.n}.`);
+  if (Math.abs(res.r - res.rho) > 0.15) caveats.push(`**Pearson ו-Spearman רחוקים**: קשר עקום, או יחידות חריגות שמושכות אותו.`);
+  if (res.jack.shift > 0.1) caveats.push(`**יחידה אחת** מזיזה את r ב-${fr(res.jack.shift)}. לבדוק אותה במפה.`);
   if (controlKey && res.partialR != null) {
     const C = VAR[controlKey];
     const flip = Math.sign(res.partialR) !== Math.sign(res.r) && Math.abs(res.partialR) > 0.1;
     const drop = Math.abs(res.partialR) < Math.abs(res.r) * 0.5;
-    caveats.push(`בשליטה על ${C.name}: r חלקי = ${fr(res.partialR)} (p = ${fmtP(res.partialP)}). ` +
-      (flip ? `הכיוון מתהפך. ${C.name} מסתיר את הקשר האמיתי.` : drop ? `רוב הקשר מוסבר על ידי ${C.name}.` : `הקשר נשמר גם כשמנטרלים את ${C.name}.`));
+    caveats.push(`בשליטה על **${C.name}**: מתאם חלקי **${fr(res.partialR)}**, מובהקות **${fmtP(res.partialP)}**. ` +
+      (flip ? `==הכיוון מתהפך: ${C.short} הסתיר את הקשר==.` : drop ? `==רוב הקשר הוא ${C.short}==.` : `==הקשר נשמר==.`));
   }
-  caveats.push('מתאם אינו סיבתיות. הממצא מצביע היכן לבדוק, ולא מה גרם למה.');
+  caveats.push('**מתאם אינו סיבתיות**: הממצא אומר איפה לבדוק, לא מה גרם.');
 
   const action = sigS && Math.abs(res.r) >= 0.3
-    ? `לבדוק בשטח את היחידות שבמפת האשכולות מסומנות "גבוה-נמוך" ו"נמוך-גבוה". הן החריגות מהדפוס העירוני, ושם נמצאות ההזדמנויות או הבעיות.`
-    : `להריץ שוב בקנה מידה אחר או עם משתנה בקרה. קשר שאינו יציב אינו בסיס להחלטה תכנונית.`;
+    ? `לבדוק בשטח את היחידות **"גבוה ליד נמוך"** ו**"נמוך ליד גבוה"** במפת האשכולות: ==שם ההזדמנויות==.`
+    : `להריץ ב**קנה מידה אחר** או עם **משתנה בקרה**. ==קשר לא יציב אינו בסיס להחלטה==.`;
 
-  return { headline, finding, meaning, caveats, action, domain: domainNote(xKey, yKey) };
+  return { headline, explain, finding, meaning, caveats, action, domain: domainNote(xKey, yKey) };
 }
 
 /** A readable step for "every N units of X", chosen per variable. */

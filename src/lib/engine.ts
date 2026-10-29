@@ -63,6 +63,7 @@ const STEP: Record<string, number> = {
   road_density: 5, walk_density: 5, intersections: 50, bus_access: 10, bus_density: 5, poi_density: 100, food_density: 20, retail_density: 20, health_density: 10,
   kinder_density: 10, kinder_access: 10, school_density: 5, early_density: 5, renewal_projects: 1, renewal_units: 100, plan_density: 1000, shimur_count: 1, dist_water: 1,
 };
+const FIXED_GEO = ['dist_water', 'area'];
 const heb = (w: string) => (/^[A-Za-z0-9]/.test(w) ? '-' + w : w);
 
 export function toRule(d: Discovery, units: Unit[], scale: UnitType): Rule {
@@ -80,20 +81,20 @@ export function toRule(d: Discovery, units: Unit[], scale: UnitType): Rule {
   let insight = '', condition = '', effect = '';
   if (d.kind === 'threshold' && d.bp) {
     insight = `${X.short} מעל ${fmt(d.bp.k, d.x)}: ${Y.short} מתהפך`;
-    condition = `כש${heb(X.name)} עובר ${fmt(d.bp.k, d.x)} ${X.unit}`;
-    effect = `השיפוע של ${Y.name} משתנה מ-${fr(d.bp.below * step, 2)} ל-${fr(d.bp.above * step, 2)} ${Y.unit} לכל ${fmt(step, d.x)} ${X.unit}`;
+    condition = `כש${heb(X.name)} עובר **${fmt(d.bp.k, d.x)} ${X.unit}**`;
+    effect = `השיפוע של **${Y.name}** משתנה מ-**${fr(d.bp.below * step, 2)}** ל-**${fr(d.bp.above * step, 2)}** ${Y.unit} לכל ${fmt(step, d.x)} ${X.unit}`;
   } else {
     insight = d.kind === 'hidden' ? `${X.short} ו${heb(Y.short)}: קשר מוסתר` : `יותר ${X.short}, ${up ? 'יותר' : 'פחות'} ${Y.short}`;
-    condition = `בכל ${fmt(step, d.x)} ${X.unit} נוספים של ${X.name}, באזורים דומים ב${ctrlName}`;
-    effect = `${Y.name} ${up ? 'עולה' : 'יורד'} בכ-${fmt(Math.abs(delta), d.y)} ${Y.unit}`;
+    condition = `בכל **${fmt(step, d.x)} ${X.unit}** נוספים של **${X.name}**, באזורים דומים ב${ctrlName}`;
+    effect = `**${Y.name}** ${up ? 'עולה' : 'יורד'} בכ-**${fmt(Math.abs(delta), d.y)} ${Y.unit}**`;
   }
   const explain = d.kind === 'hidden'
-    ? `גולמית **r ${fr(d.r)}**. בניטרול **${ctrlName}**: **${fr(d.hidden!.partialR)}**.`
+    ? `מתאם גולמי **${fr(d.r)}**, כמעט כלום. בניטרול **${ctrlName}**: ==מתאם ${fr(d.hidden!.partialR)}==.`
     : d.kind === 'threshold'
-      ? `**${Math.round(d.bp!.gain * 100)}%** שונות מוסברת נוספת בנקודת **${fmt(d.bp!.k, d.x)}**.`
+      ? `בנקודה **${fmt(d.bp!.k, d.x)} ${X.unit}** הכיוון מתהפך: ==${Math.round(d.bp!.gain * 100)}% הסבר נוסף==.`
       : d.kind === 'nonlinear'
-        ? `מתאם מרחק **${fr(d.dcor)}** לעומת **r ${fr(d.r)}**: הקשר עקום.`
-        : `**r ${fr(d.r)}**, ואחרי ניטרול עוצמה עירונית **${fr(d.beyond)}**.`;
+        ? `מתאם מרחק **${fr(d.dcor)}** מול מתאם רגיל **${fr(d.r)}**: ==הקשר עקום, לא קו==.`
+        : `מתאם גולמי **${fr(d.r)}**. אחרי ניטרול **עוצמה עירונית**: ==מתאם ${fr(d.beyond)}==.`;
   // where the rule matters: units on the "bad" side of Y, or the top quarter of X when Y has no direction
   const yv = ys.map((v, i) => [v, i] as const).filter(([v]) => v != null) as [number, number][];
   const sorted = [...yv].sort((a, b) => a[0] - b[0]);
@@ -102,8 +103,12 @@ export function toRule(d: Discovery, units: Unit[], scale: UnitType): Rule {
   const evidence = d.q < 0.01 ? 1 : d.q < 0.05 ? 0.82 : d.q < 0.1 ? 0.55 : 0.3;
   const reliability = Math.round(100 * evidence * (d.consistent ? 1 : 0.65) * Math.sqrt(Math.min(1, d.nEff / 30)));
   const lever = Y.good ? (Y.good === 'down') === up ? `להפחית ${X.name}` : `להגדיל ${X.name}` : `לבחון את ${X.name}`;
-  const planning = d.kind === 'threshold'
-    ? `להגדיר את ${fmt(d.bp!.k, d.x)} ${X.unit} כסף תכנוני, ולבדוק כל תוכנית שחוצה אותו.`
-    : `${lever} ביחידות שבהן ${Y.name} ${Y.good === 'up' ? 'נמוך' : 'גבוה'}, ולמדוד אחרי שנה.`;
+  // geography cannot be changed: the rule then says where to compensate, not what to move
+  const fixed = FIXED_GEO.includes(d.x);
+  const planning = fixed
+    ? `${X.name} אינו מנוף. ==לפצות ביחידות שבהן ${Y.name} ${Y.good === 'up' ? 'נמוך' : 'גבוה'}==: צל, צמחייה ושטחים פתוחים קודם שם.`
+    : d.kind === 'threshold'
+    ? `להגדיר **${fmt(d.bp!.k, d.x)} ${X.unit}** כ==סף תכנוני==, ולבדוק כל תוכנית שחוצה אותו.`
+    : `==${lever}== ביחידות שבהן **${Y.name} ${Y.good === 'up' ? 'נמוך' : 'גבוה'}**, ולמדוד אחרי שנה.`;
   return { id: `${d.x}|${d.y}`, x: d.x, y: d.y, kind: d.kind, insight, explain, condition, effect, planning, reliability, applies, scale, control: ctrlKey === 'urbanity' ? undefined : ctrlKey, d };
 }

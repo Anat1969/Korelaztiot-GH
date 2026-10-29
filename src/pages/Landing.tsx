@@ -82,7 +82,7 @@ export default function Landing() {
         <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))' }}>
           <div className="tone tone-problem"><h4>הבעיה</h4><Rich as="p">{'כל מחלקה מחזיקה **שכבה משלה**. קשרים בין חום, גנים, תחבורה והתחדשות ==לא נבדקים==.'}</Rich></div>
           <div className="tone tone-solution"><h4>הפתרון</h4><Rich as="p">{'כל השכבות על **אותן יחידות**, ומנוע שסורק **כל זוג** ומנטרל את מה שמובן מאליו.'}</Rich></div>
-          <div className="tone tone-insight"><h4>התובנה</h4><Rich as="p">{trap != null ? `ברובעים, בשליטה על הים, הצמחייה מקררת: **r ${fr(trap)}**. ==הים הסתיר את זה==.` : 'טוען דוגמה חיה מהנתונים'}</Rich></div>
+          <div className="tone tone-insight"><h4>התובנה</h4><Rich as="p">{trap != null ? `ברובעים, בשליטה על הים, הצמחייה מקררת: מתאם חלקי **${fr(trap)}**. ==הים הסתיר את זה==.` : 'טוען דוגמה חיה מהנתונים'}</Rich></div>
         </div>
       </section>
 

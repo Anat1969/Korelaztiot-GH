@@ -14,7 +14,7 @@ interface Tour { id: string; title: string; question: string; steps: Step[] }
 const TOURS: Tour[] = [
   { id: 'sea', title: 'הים מקרר יותר מהעצים', question: 'למה רובעים ירוקים באשדוד לא תמיד קרירים יותר?', steps: [
     { title: 'מדידה', text: 'מפת **החום** של העיר: המזרח חם, החוף קריר.', to: '/measure?tab=atlas&u=h3-9', cta: 'לאטלס' },
-    { title: 'הבנה', text: '**מרחק מהים** מסביר את החום יותר מכל שכבה אחרת: ==r גבוה ועקבי בשלושה קני מידה==.', to: '/lab?x=dist_water&y=lst&u=h3-8', cta: 'למעבדה' },
+    { title: 'הבנה', text: '**מרחק מהים** מסביר את החום יותר מכל שכבה אחרת: ==מתאם גבוה ועקבי בשלושה קני מידה==.', to: '/lab?x=dist_water&y=lst&u=h3-8', cta: 'למעבדה' },
     { title: 'ידיעה', text: 'כשמנטרלים את הים, **הצמחייה מקררת**. הקשר היה מוסתר.', to: '/lab?x=ndvi&y=lst&u=quarters&c=dist_water', cta: 'לבדיקה בשליטה' },
     { title: 'תכנון', text: 'כמה מעלות חוסכת תוספת **כיסוי ירוק** ברובעים החמים?', to: '/plan?tab=twin&y=lst&d=green_cover,bld_coverage,dist_water', cta: 'לתאום' },
   ] },

@@ -6,6 +6,8 @@ import { VAR } from '../lib/variables';
 import { UNIT_TYPES } from '../lib/data';
 import { fmtP, fr } from '../lib/stats';
 import { toast } from '../components/Toast';
+import Rich from '../components/Rich';
+import Light, { levelOfScore } from '../components/Light';
 
 export default function Findings({ embedded = false }: { embedded?: boolean }) {
   const [items, setItems] = useState<Finding[] | null>(null);
@@ -40,13 +42,14 @@ export default function Findings({ embedded = false }: { embedded?: boolean }) {
               <h3 style={{ margin: '12px 0 8px' }}>{f.title}</h3>
               <div style={{ display: 'flex', gap: 16, alignItems: 'baseline' }}>
                 <span className="mono" style={{ fontSize: 30, color: r >= 0 ? 'var(--pos)' : 'var(--neg)' }}>{fr(r, 2, true)}</span>
-                <span className="small muted">אמינות {rel}, p מרחבי {fmtP(Number(f.stats.pSpatial))}</span>
+                <Light level={levelOfScore(rel)}>אמינות {rel}</Light>
+                {f.stats.pSpatial != null && <span className="small muted">p מרחבי {fmtP(Number(f.stats.pSpatial))}</span>}
               </div>
               <p className="small muted">{VAR[f.x_key]?.name} מול {VAR[f.y_key]?.name}{f.control_key ? `, בשליטה על ${VAR[f.control_key]?.name}` : ''}</p>
-              {f.summary && <p className="small">{f.summary}</p>}
+              {f.summary && <Rich as="p" className="explain" >{f.summary}</Rich>}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Link className="btn small" to={`/lab?x=${f.x_key}&y=${f.y_key}&u=${f.unit_type}${f.control_key ? `&c=${f.control_key}` : ''}`}>פתיחה במעבדה</Link>
-                {(f.local || canEdit) && <button className="btn ghost small" onClick={async () => { if (await removeFinding(f)) { toast('הממצא הוסר'); load(); } else toast('ההסרה נכשלה'); }}>הסרה</button>}
+                {(f.local || canEdit) && <button className="btn quiet" title="מוחק את הממצא מהספרייה" onClick={async () => { if (await removeFinding(f)) { toast('הממצא הוסר'); load(); } else toast('ההסרה נכשלה'); }}>הסרה</button>}
               </div>
             </motion.div>
           );

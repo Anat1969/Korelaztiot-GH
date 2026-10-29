@@ -261,7 +261,8 @@ pl_cat = lambda *keys: [ll(p[0]) for p in places if ok(p[0]) and p[0].geom_type 
 points = dict(
     bus=[[round(t['lng'], 5), round(t['lat'], 5)] for t in stops],
     kinder=[ll(p) for p in kinder if ok(p)], school=[ll(p) for p in schools if ok(p)], early=[ll(p) for p in early if ok(p)],
-    shimur=[[round(b['lng'], 5), round(b['lat'], 5), b['name']] for b in load('shimur_buildings') if b.get('lat')],
+    # photos live in the conservation app (shimur-gh); the path is resolved there
+    shimur=[[round(b['lng'], 5), round(b['lat'], 5), b['name'], b.get('image_url') or '', b.get('year_built') or 0, b.get('address') or ''] for b in load('shimur_buildings') if b.get('lat')],
     renewal=[[round(p[0].x, 5), round(p[0].y, 5), q.get('title'), max(0, (q.get('units_planned') or 0) - (q.get('units_existing') or 0))] for p, q in zip(plan_pts, [q for q in plans if center_pt(q['center']) is not None])],
     food=pl_cat('food_and_drink', 'eat_and_drink'), health=pl_cat('health'), retail=pl_cat('shopping', 'retail'),
     parks=[[*ll(p.representative_point()), round(m_area(p) / 10000, 2)] for p in parks_big],
