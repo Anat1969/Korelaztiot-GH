@@ -115,8 +115,8 @@ export default function Lab() {
       <aside className="side" aria-label="בחירת משתנים">
         <div className="card pad grid">
           <div>
-            <div className="eyebrow">מעבדה</div>
-            <h3 style={{ marginTop: 4 }}>מה הולך יחד עם מה</h3>
+            <div className="eyebrow">הבנה · מעבדה</div>
+            <h3 style={{ marginTop: 4 }}>קשר אחד, לעומק</h3>
           </div>
           <VariableSelect id="vx" label="משתנה X" value={xKey} onChange={v => set({ x: v })} />
           <button className="btn ghost small" onClick={() => set({ x: yKey, y: xKey })}>החלפת X ו-Y</button>
@@ -251,7 +251,8 @@ export default function Lab() {
               )}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
                 <button className="btn small" onClick={save}>שמירת הממצא</button>
-                <Link className="btn ghost small" to={`/matrix?u=${unit}`}>כל הקשרים במטריצה</Link>
+                <Link className="btn ghost small" to={`/know?tab=matrix&u=${unit}`}>כל הקשרים במטריצה</Link>
+                <Link className="btn ghost small" to={`/plan?tab=rules&r=${encodeURIComponent(`${xKey}|${yKey}`)}&u=${unit}`}>לכלל תכנון</Link>
               </div>
             </div>
           </>

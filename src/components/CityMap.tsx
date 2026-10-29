@@ -30,16 +30,20 @@ interface Props {
   onHover?: (i: number | null) => void;
   onSelect?: (i: number | null) => void;
   label?: (i: number) => string;
+  /** extra features drawn above the units: polygons (radius) and points, coloured by `color` */
+  overlay?: GeoJSON.FeatureCollection;
+  onMapClick?: (lngLat: [number, number]) => void;
+  focus?: [number, number] | null;
 }
 
-export default function CityMap({ units, colors, heights, extrude = false, basemap = 'light', opacity = 0.78, selected = null, onHover, onSelect, label }: Props) {
+export default function CityMap({ units, colors, heights, extrude = false, basemap = 'light', opacity = 0.78, selected = null, onHover, onSelect, label, overlay, onMapClick, focus }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<MLMap | null>(null);
   const [ready, setReady] = useState(0);
   const hovered = useRef<number | null>(null);
   const popup = useRef<maplibregl.Popup | null>(null);
-  const cb = useRef({ onHover, onSelect, label });
-  cb.current = { onHover, onSelect, label };
+  const cb = useRef({ onHover, onSelect, label, onMapClick });
+  cb.current = { onHover, onSelect, label, onMapClick };
 
   // create once
   useEffect(() => {
@@ -72,6 +76,7 @@ export default function CityMap({ units, colors, heights, extrude = false, basem
     m.on('click', (e: MapMouseEvent) => {
       const f = m.queryRenderedFeatures(e.point, { layers: m.getLayer('u-fill') ? ['u-fill'] : [] })[0];
       cb.current.onSelect?.(f ? Number(f.id) : null);
+      cb.current.onMapClick?.([e.lngLat.lng, e.lngLat.lat]);
     });
     return () => { m.remove(); map.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,6 +114,26 @@ export default function CityMap({ units, colors, heights, extrude = false, basem
     }
     m.setPaintProperty('u-fill', 'fill-opacity', ['case', ['boolean', ['feature-state', 'hover'], false], Math.min(1, opacity + 0.15), ['==', ['get', 'has'], 0], 0.05, opacity]);
   }, [units, colors, heights, ready, opacity]);
+
+  // overlay (radius ring and points)
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const data = overlay ?? { type: 'FeatureCollection', features: [] };
+    const src = m.getSource('overlay') as maplibregl.GeoJSONSource | undefined;
+    if (src) { src.setData(data); return; }
+    m.addSource('overlay', { type: 'geojson', data });
+    m.addLayer({ id: 'ov-fill', type: 'fill', source: 'overlay', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#15191c', 'fill-opacity': 0.06 } });
+    m.addLayer({ id: 'ov-line', type: 'line', source: 'overlay', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'line-color': '#15191c', 'line-width': 2, 'line-dasharray': [2, 2] } });
+    m.addLayer({ id: 'ov-pt', type: 'circle', source: 'overlay', filter: ['==', ['geometry-type'], 'Point'], paint: {
+      'circle-radius': ['coalesce', ['get', 'r'], 5], 'circle-color': ['coalesce', ['get', 'color'], '#15191c'],
+      'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5,
+    } });
+  }, [overlay, ready]);
+
+  useEffect(() => {
+    if (focus && map.current) map.current.flyTo({ center: focus, zoom: 14.6, duration: 1200 });
+  }, [focus]);
 
   // 3D mode
   useEffect(() => {

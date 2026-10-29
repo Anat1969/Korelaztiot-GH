@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: pip install rasterio duckdb h3 shapely pyproj numpy
+      - run: pip install rasterio duckdb h3 shapely pyproj numpy scipy
       - name: Fetch sources
         run: |
           python scripts/fetch_muni.py

@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-29T18:30+00:00",
+ "generated": "2026-10-29T19:04+00:00",
  "overture": "2026-10-21.0",
  "sentinel2": {
   "id": "S2C_T36SXA_20260802T082553_L2A",
@@ -14,13 +14,15 @@
   "stac": "planetarycomputer.microsoft.com, landsat-c2-l2, lwir11"
  },
  "counts": {
+  "bus_stops": 508,
+  "big_parks": 116,
   "buildings": 26365,
   "places": 2918,
   "segments": 13975,
   "landuse": 1519,
   "kinder": 578,
-  "schools": 194,
-  "early": 103,
+  "schools": 192,
+  "early": 100,
   "shimur": 34,
   "plans": 18
  },

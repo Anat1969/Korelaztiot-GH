@@ -33,8 +33,8 @@ export function bivariateColors(xs: (number | null)[], ys: (number | null)[]): (
 // sequential ramp: pale stone to deep ink-teal, perceptually even enough for 7 steps
 const RAMP = ['#f3efe6', '#e0e3c8', '#b9d3b0', '#86bba4', '#5a9c9a', '#3c7a8c', '#2b5672', '#1f3352'];
 
-export function quantileColors(vals: (number | null)[], ramp = RAMP): (string | null)[] {
-  const v = vals.filter((x): x is number => x != null && isFinite(x)).sort((a, b) => a - b);
+export function quantileColors(vals: (number | null)[], ramp = RAMP, base: (number | null)[] = vals): (string | null)[] {
+  const v = base.filter((x): x is number => x != null && isFinite(x)).sort((a, b) => a - b);
   if (!v.length) return vals.map(() => null);
   const k = ramp.length;
   const breaks = Array.from({ length: k - 1 }, (_, i) => v[Math.floor(((i + 1) * v.length) / k)]);

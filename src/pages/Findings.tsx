@@ -7,7 +7,7 @@ import { UNIT_TYPES } from '../lib/data';
 import { fmtP, fr } from '../lib/stats';
 import { toast } from '../components/Toast';
 
-export default function Findings() {
+export default function Findings({ embedded = false }: { embedded?: boolean }) {
   const [items, setItems] = useState<Finding[] | null>(null);
   const [remote, setRemote] = useState(true);
   const load = () => listFindings().then(d => { setItems(d.items); setRemote(d.remote); });
@@ -15,7 +15,7 @@ export default function Findings() {
   const canEdit = !!editorKey();
 
   return (
-    <div className="page">
+    <div className={embedded ? '' : 'page'}>
       <div className="eyebrow">ספריית ממצאים</div>
       <h2 style={{ margin: '8px 0 12px' }}>מה כבר למדנו על העיר</h2>
       <p className="lead">כל ממצא נשמר עם המספרים שמאחוריו ועם מדד האמינות שלו ביום השמירה. לחיצה פותחת אותו מחדש במעבדה, על הנתונים העדכניים.</p>
