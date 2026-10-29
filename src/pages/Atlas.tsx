@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
+import Rich from '../components/Rich';
 import { motion } from 'motion/react';
 import MiniMap from '../components/MiniMap';
 import { column, loadUnits, UNIT_TYPES, type Unit, type UnitType } from '../lib/data';
@@ -15,7 +16,7 @@ export default function Atlas({ embedded = false }: { embedded?: boolean }) {
     <div className={embedded ? '' : 'page'}>
       <div className="eyebrow">אטלס</div>
       <h2 style={{ margin: '8px 0 12px' }}>העיר ב-{MATRIX_KEYS.length} שכבות</h2>
-      <p className="lead">כל מפה מציגה משתנה אחד בשבעה מדרגים שווים במספר היחידות. כשמניחים אותן זו לצד זו רואים דפוסים חוזרים: צפון מול דרום, החוף מול המזרח, הרובעים הוותיקים מול החדשים. לחיצה על מפה פותחת אותה במעבדה.</p>
+      <Rich as="p" className="lead">{'כל מפה מציגה משתנה אחד בשבעה מדרגים שווים במספר היחידות. כשמניחים אותן זו לצד זו רואים דפוסים חוזרים: צפון מול דרום, החוף מול המזרח, הרובעים הוותיקים מול החדשים. לחיצה על מפה פותחת אותה במעבדה.'}</Rich>
       <div className="seg" role="group" aria-label="יחידת ניתוח" style={{ margin: '18px 0' }}>{UNIT_TYPES.map(u => <button key={u.key} aria-pressed={unit === u.key} onClick={() => { const n = new URLSearchParams(sp); n.set('u', u.key); setSp(n, { replace: true }); }}>{u.short}</button>)}</div>
       <div className="atlas" data-testid="atlas">
         {MATRIX_KEYS.map((k, i) => {

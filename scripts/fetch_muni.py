@@ -7,7 +7,7 @@ KEY = 'sb_publishable_1KSwG6rqTzBSHmI2RxX6Fw_EEcuKzk3'
 Q = {
     'mt_map_features': 'layer=in.(city,quarters_official)&select=id,layer,name,props,geom,source,certainty',
     'mt_existing': 'select=id,topic,subtype,name,geom,quarter_id',
-    'shimur_buildings': 'select=id,name,lat,lng,year_built,protection_level',
+    'shimur_buildings': 'select=id,name,address,lat,lng,year_built,protection_level,image_url',
     'plan_projects': 'select=id,title,kind,status,units_existing,units_planned,center,published',
     'mt_districts': 'select=id,name,target_pop,total_area_m2,res_area_m2,units_total,employment_m2,quarters',
     'cl_streets': 'select=code,name,kind,center&order=name',

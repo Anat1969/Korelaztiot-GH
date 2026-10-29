@@ -11,7 +11,9 @@ import { KIND_ABOUT, KIND_NAME } from '../lib/config';
 import { discoveries, loadScales, toRule, type Scales } from '../lib/engine';
 import type { Discovery, Kind } from '../lib/discover';
 import { pairsOf, fr } from '../lib/stats';
-import { bivariateColors } from '../lib/color';
+import { bivariateColors, BIVAR } from '../lib/color';
+import Light, { levelOfScore } from '../components/Light';
+import SortTable from '../components/SortTable';
 
 const Explorer = lazy(() => import('../components/Explorer'));
 const Matrix = lazy(() => import('./Matrix'));
@@ -38,6 +40,7 @@ function Auto({ sp, setSp }: { sp: URLSearchParams; setSp: (p: URLSearchParams, 
   const scale = (UNIT_TYPES.find(u => u.key === sp.get('u'))?.key ?? 'h3-8') as UnitType;
   const kind = (sp.get('k') as Kind | 'all') || 'all';
   const cross = sp.get('x') !== '0';
+  const view = sp.get('v') === 'table' ? 'table' : 'cards';
   const [res, setRes] = useState<Discovery[] | null>(null);
   const [S, setS] = useState<Scales | null>(null);
   useEffect(() => { setRes(null); discoveries(scale).then(setRes); loadScales().then(setS); }, [scale]);
@@ -65,13 +68,27 @@ function Auto({ sp, setSp }: { sp: URLSearchParams; setSp: (p: URLSearchParams, 
           ))}
         </div>
         <button className="check" aria-pressed={cross} onClick={() => set('x', cross ? '0' : '1')}>רק בין תחומים שונים</button>
+        <div className="seg" role="group" aria-label="תצוגה"><button aria-pressed={view !== 'table'} onClick={() => set('v', 'cards')}>כרטיסים</button><button aria-pressed={view === 'table'} onClick={() => set('v', 'table')}>טבלה ממוינת</button></div>
       </div>
       {kind !== 'all' && <p className="muted small" style={{ marginTop: -8 }}>{KIND_ABOUT[kind]}</p>}
       {!res && <div className="card pad muted">סורק את כל הזוגות בשלושה קני מידה</div>}
       {res && !list.length && <div className="card pad">אין תגליות שעומדות בסף בבחירה הזו. נסו קנה מידה אחר או בטלו את הסינון.</div>}
-      <div className="disc-grid" data-testid="discoveries">
-        {S && list.map((d, i) => <DiscoveryCard key={d.x + d.y} d={d} S={S} scale={scale} i={i} />)}
-      </div>
+      {view === 'cards' ? (
+        <div className="disc-grid" data-testid="discoveries">
+          {S && list.map((d, i) => <DiscoveryCard key={d.x + d.y} d={d} S={S} scale={scale} i={i} />)}
+        </div>
+      ) : S && (
+        <div className="card pad">
+          <SortTable testid="discoveries-table" rows={list.map(d => ({ d, rule: toRule(d, S[scale], scale) }))} initial={{ key: 'rel', dir: -1 }}
+            group={r => KIND_NAME[r.d.kind]} cols={[
+              { key: 'pair', label: 'זוג שכבות', value: r => `${VAR[r.d.x].name} ${VAR[r.d.y].name}`, render: r => <Link to={`/lab?x=${r.d.x}&y=${r.d.y}&u=${scale}`}>{VAR[r.d.x].name} ו{VAR[r.d.y].name}</Link> },
+              { key: 'insight', label: 'תובנה', value: r => r.rule.insight },
+              { key: 'r', label: 'מתאם גולמי', value: r => r.d.r, num: true, render: r => <b className="num">{fr(r.d.r, 2, true)}</b> },
+              { key: 'beyond', label: 'אחרי ניטרול', value: r => (r.d.kind === 'hidden' ? r.d.hidden!.partialR : r.d.beyond), num: true, render: r => <b className="num">{fr(r.d.kind === 'hidden' ? r.d.hidden!.partialR : r.d.beyond, 2, true)}</b> },
+              { key: 'rel', label: 'אמינות', value: r => r.rule.reliability, num: true, render: r => <Light level={levelOfScore(r.rule.reliability)}>{r.rule.reliability}</Light> },
+            ]} />
+        </div>
+      )}
     </>
   );
 }
@@ -87,13 +104,19 @@ function DiscoveryCard({ d, S, scale, i }: { d: Discovery; S: Scales; scale: Uni
     <motion.article className="card pad" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 3) * 0.06 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
         <span className={`kind kind-${d.kind}`}>{KIND_NAME[d.kind]}</span>
-        <span className="small muted">אמינות <b className="num">{rule.reliability}</b></span>
+        <Light level={levelOfScore(rule.reliability)}>אמינות {rule.reliability}</Light>
       </div>
       <h3 className="insight-line" style={{ margin: '12px 0 6px' }}>{rule.insight}</h3>
-      <Rich as="p" className="small" >{rule.explain}</Rich>
+      <Rich as="p" className="explain">{rule.explain}</Rich>
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8, margin: '10px 0' }}>
         <MiniScatter xs={pts.xs} ys={pts.ys} k={d.kind === 'threshold' ? d.bp?.k : undefined} color={d.r >= 0 ? 'var(--heat)' : 'var(--sea)'} title={`${VAR[d.x].name} מול ${VAR[d.y].name}`} />
         <div className="mini" style={{ border: '1px solid var(--line)', background: 'var(--bg-2)' }}><MiniMap units={units} colors={colors} title="מפה דו-משתנית" /></div>
+      </div>
+      <div className="mini-legend" aria-label="מקרא">
+        <span><i style={{ background: BIVAR[0][2] }} />{VAR[d.x].short} גבוה</span>
+        <span><i style={{ background: BIVAR[2][0] }} />{VAR[d.y].short} גבוה</span>
+        <span><i style={{ background: BIVAR[2][2] }} />שניהם</span>
+        <span><i style={{ background: BIVAR[0][0] }} />שניהם נמוכים</span>
       </div>
       <div className="small" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <span><span className="dot" style={{ background: fx.color }} /> {VAR[d.x].name}</span>

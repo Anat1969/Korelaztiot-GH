@@ -6,7 +6,8 @@ import Rich from '../components/Rich';
 import { circle, column, loadPoints, metres, type Points, type Unit } from '../lib/data';
 import { VAR, fmt } from '../lib/variables';
 import { discoveries, loadScales, toRule, type Rule, type Scales } from '../lib/engine';
-import { quantileColors } from '../lib/color';
+import { quantileColors, SEQ_RAMP } from '../lib/color';
+import { colorOf, type Level } from '../components/Light';
 
 const CityMap = lazy(() => import('../components/CityMap'));
 const Atlas = lazy(() => import('./Atlas'));
@@ -21,6 +22,15 @@ const CAT: Record<string, { name: string; color: string }> = {
   food: { name: 'מסעדה או בית קפה', color: '#b8442f' }, retail: { name: 'חנות', color: '#5b5f9a' }, shimur: { name: 'מבנה לשימור', color: '#15191c' }, renewal: { name: 'פרויקט התחדשות', color: '#8a5a3c' },
 };
 const DEFAULT: [number, number] = [34.6466, 31.7975]; // רובע ה, מרכז העיר הוותיק
+const SHIMUR_APP = 'https://shimur-gh.vercel.app';
+
+// Sibling municipal apps (from aoa_apps): each one deepens a layer this profile only counts.
+const RELATED: { name: string; url: string; when: (n: Near) => boolean; why: (n: Near) => string }[] = [
+  { name: 'רשימת שימור ותיק תיעוד', url: SHIMUR_APP, when: n => n.count.shimur > 0, why: n => `**${n.count.shimur}** מבני שימור ברדיוס, עם תיק תיעוד ותמונות.` },
+  { name: 'מה נבנה סביבי', url: 'https://ashdod-ma-nivne.vercel.app', when: n => n.count.renewal > 0, why: n => `**${n.count.renewal}** פרויקטי התחדשות ברדיוס: מה ייבנה ומתי.` },
+  { name: 'תואם מתאר', url: 'https://ashdod-mitar-twin.vercel.app', when: () => true, why: () => 'יעדי **תוכנית המתאר** למתחם: אוכלוסייה, יח"ד ושטחי ציבור.' },
+  { name: 'מוקד 106, שקיפות לציבור', url: 'https://moked106.vercel.app', when: () => true, why: () => 'פניות **מוקד 106** ברחובות הסביבה.' },
+];
 
 export default function Measure() {
   const [sp] = useSearchParams();
@@ -115,6 +125,13 @@ function Place() {
           <div className="map-overlay" style={{ top: 12, insetInlineStart: 12 }}>
             <div className="seg" role="group" aria-label="שכבת רקע">{LAYERS.map(l => <button key={l.k} aria-pressed={layer === l.k} onClick={() => set({ layer: l.k })}>{l.l}</button>)}</div>
           </div>
+          <div className="map-overlay legend" style={{ bottom: 12, insetInlineEnd: 12, maxWidth: 230 }} data-testid="measure-legend">
+            <div className="small" style={{ fontWeight: 600 }}>{VAR[layer].name}</div>
+            <div style={{ display: 'flex', direction: 'ltr', margin: '4px 0' }}>{SEQ_RAMP.map(c => <span key={c} style={{ flex: 1, height: 8, background: c }} />)}</div>
+            <div className="small muted" style={{ display: 'flex', justifyContent: 'space-between', direction: 'ltr' }}><span>נמוך</span><span>גבוה</span></div>
+            <div className="mini-legend">{Object.entries(CAT).filter(([k]) => (near?.count[k] ?? 0) > 0).map(([k, c]) => <span key={k}><i style={{ background: c.color, borderRadius: '50%' }} />{c.name}</span>)}</div>
+            <div className="hint">קו מקווקו: רדיוס של {R} מ'</div>
+          </div>
         </section>
 
         <section className="grid" style={{ gap: 12, alignContent: 'start' }} data-testid="profile">
@@ -133,7 +150,7 @@ function Place() {
                 <span className="small">{VAR[k].name}</span>
                 <div className="bar" style={{ direction: 'ltr' }}>
                   <motion.i initial={{ width: 0 }} animate={{ width: `${prof.pct[k]}%` }} transition={{ duration: 0.7 }}
-                    style={{ background: VAR[k].good ? ((prof.pct[k] > 50) === (VAR[k].good === 'up') ? 'var(--solution)' : 'var(--problem)') : 'var(--sea)' }} />
+                    style={{ background: barColor(k, prof.pct[k]) }} />
                   <b style={{ insetInlineStart: '50%' }} />
                 </div>
                 <span className="small"><b className="num">{fmt(prof.values[k], k)}</b> <span className="muted">{VAR[k].unit}</span></span>
@@ -154,6 +171,28 @@ function Place() {
               ))}
             </div>
             {near.named.length > 0 && <ul className="small" style={{ paddingInlineStart: 18, marginTop: 10 }}>{near.named.map(n => <li key={n}>{n}</li>)}</ul>}
+            {near.shimur.length > 0 && (
+              <>
+                <div className="eyebrow" style={{ marginTop: 18 }}>מבני שימור בסביבה</div>
+                <div className="grid" style={{ gap: 6, marginTop: 8 }} data-testid="shimur-photos">
+                  {near.shimur.map(b => (
+                    <a key={b.name} className="card flat photo-card" href={SHIMUR_APP} target="_blank" rel="noreferrer">
+                      {b.img ? <img src={b.img.startsWith('http') ? b.img : SHIMUR_APP + b.img} alt={b.name} loading="lazy" /> : <span style={{ width: 96, height: 72, background: 'var(--bg-2)' }} />}
+                      <span><b style={{ fontWeight: 600 }}>{b.name}</b><br /><span className="small muted">{b.addr} · <span className="num">{Math.round(b.d)}</span> מ'</span></span>
+                    </a>
+                  ))}
+                </div>
+                <p className="hint">התמונות מאפליקציית רשימת השימור. לחיצה פותחת את תיק התיעוד.</p>
+              </>
+            )}
+            <div className="eyebrow" style={{ marginTop: 18 }}>אפליקציות עירוניות למקום הזה</div>
+            <div className="grid" style={{ gap: 6, marginTop: 8 }}>
+              {RELATED.filter(r => r.when(near)).map(r => (
+                <a key={r.url} className="card flat" href={r.url} target="_blank" rel="noreferrer" style={{ padding: '10px 12px', textDecoration: 'none', display: 'block' }}>
+                  <b style={{ fontWeight: 600 }}>{r.name}</b> <Rich as="span" className="small muted">{r.why(near)}</Rich>
+                </a>
+              ))}
+            </div>
           </section>
         </div>
       )}
@@ -162,6 +201,13 @@ function Place() {
 }
 
 // ---------- profile computation ----------
+/** Percentile in the good direction: top 40% green, middle 20% orange, bottom 40% red; no direction stays neutral. */
+function barColor(k: string, pct: number) {
+  const g = VAR[k].good;
+  if (!g) return 'var(--sea)';
+  const fav = g === 'up' ? pct : 100 - pct;
+  return fav >= 60 ? 'var(--tl-good)' : fav >= 40 ? 'var(--tl-mid)' : 'var(--tl-bad)';
+}
 interface Prof { n: number; values: Record<string, number | null>; pct: Record<string, number> }
 
 function profile(units: Unit[], p: [number, number], R: number): Prof {
@@ -177,10 +223,10 @@ function profile(units: Unit[], p: [number, number], R: number): Prof {
   return { n: inside.length, values, pct };
 }
 
-interface Near { items: { cat: string; c: [number, number]; d: number }[]; nearest: Record<string, number>; count: Record<string, number>; named: string[] }
+interface Near { items: { cat: string; c: [number, number]; d: number }[]; nearest: Record<string, number>; count: Record<string, number>; named: string[]; shimur: { name: string; img: string; addr: string; d: number }[] }
 
 function nearby(P: Points, p: [number, number], R: number): Near {
-  const items: Near['items'] = [], nearest: Record<string, number> = {}, count: Record<string, number> = {}, named: string[] = [];
+  const items: Near['items'] = [], nearest: Record<string, number> = {}, count: Record<string, number> = {}, named: string[] = [], shimur: Near['shimur'] = [];
   for (const cat of Object.keys(CAT) as (keyof typeof CAT)[]) {
     const list = (P as unknown as Record<string, number[][]>)[cat] ?? [];
     let best = Infinity;
@@ -192,34 +238,47 @@ function nearby(P: Points, p: [number, number], R: number): Near {
       if (d < best) best = d;
       if (d <= R) {
         count[cat]++; items.push({ cat, c, d });
-        if ((cat === 'shimur' || cat === 'renewal') && typeof pt[2] === 'string') named.push(`${CAT[cat].name}: ${pt[2]}`);
+        if (cat === 'renewal' && typeof pt[2] === 'string') named.push(`${CAT[cat].name}: ${pt[2]}`);
+        if (cat === 'shimur') shimur.push({ name: String(pt[2]), img: String(pt[3] ?? ''), addr: String(pt[5] ?? ''), d });
       }
     }
     nearest[cat] = best;
   }
-  return { items, nearest, count, named: named.slice(0, 8) };
+  return { items, nearest, count, named: named.slice(0, 8), shimur: shimur.sort((a, b) => a.d - b.d).slice(0, 4) };
 }
+
+// walking targets in three states: met (green), within half again of the target (orange), missed (red)
+const level = (d: number, target: number): Level => (d <= target ? 'good' : d <= target * 1.5 ? 'mid' : 'bad');
+const WORD: Record<Level, string> = { good: 'עומד ביעד', mid: 'קרוב ליעד', bad: 'לא עומד ביעד' };
+const TONE: Record<Level, string> = { good: 'tone-solution', mid: 'tone-mid', bad: 'tone-problem' };
 
 function ProfileView({ name, prof, near, R }: { name: string; prof: Prof; near: Near; R: number }) {
   const checks = [
-    { ok: near.nearest.parks <= 300, title: 'גן ציבורי עד 300 מ\'', d: near.nearest.parks, src: 'יעד ארגון הבריאות העולמי (WHO, 2016): גן של חצי דונם ומעלה עד 300 מ\'.' },
-    { ok: near.nearest.bus <= 400, title: 'תחנת אוטובוס עד 400 מ\'', d: near.nearest.bus, src: 'סף ההליכה המקובל לתחנה (TCQSM, מדריך איכות השירות בתחבורה ציבורית).' },
-    { ok: near.nearest.kinder <= 400, title: 'גן ילדים עד 400 מ\'', d: near.nearest.kinder, src: 'מדד עבודה של המעבדה למרחק הליכה של הורה עם ילד.' },
-  ];
+    { t: 300, title: 'גן ציבורי', d: near.nearest.parks, src: 'יעד **WHO** (2016): גן של חצי דונם ומעלה עד **300 מ\'**.' },
+    { t: 400, title: 'תחנת אוטובוס', d: near.nearest.bus, src: 'סף ההליכה המקובל לתחנה: **400 מ\'** (TCQSM).' },
+    { t: 400, title: 'גן ילדים', d: near.nearest.kinder, src: 'מדד עבודה של המעבדה: **400 מ\'** להורה עם ילד.' },
+  ].map(c => ({ ...c, lv: level(c.d, c.t) }));
   const hot = prof.pct.lst;
   const insight = hot >= 75 ? `חם מ-${hot}% מהעיר` : hot <= 25 ? `קריר מ-${100 - hot}% מהעיר` : `חום בטווח האמצעי של העיר`;
-  const passed = checks.filter(c => c.ok).length;
+  const passed = checks.filter(c => c.lv === 'good').length;
   return (
     <>
       <div className="card pad rise">
         <div className="eyebrow">{name} · רדיוס {R} מ' · {prof.n} משושים</div>
         <h3 className="insight-line" style={{ margin: '8px 0 6px' }}>{insight}, {passed} מתוך 3 יעדי הליכה</h3>
-        <Rich as="p" className="small">{`טמפרטורת פני השטח **${fmt(prof.values.lst, 'lst')}°C**, כיסוי ירוק **${fmt(prof.values.green_cover, 'green_cover')}%**, תכסית **${fmt(prof.values.bld_coverage, 'bld_coverage')}%**.`}</Rich>
+        <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', marginTop: 10 }}>
+          <div className="kv"><span className="k">טמפרטורת פני שטח</span><span className="v" style={{ color: hot >= 75 ? 'var(--tl-bad)' : hot <= 25 ? 'var(--tl-good)' : undefined }}>{fmt(prof.values.lst, 'lst')}<span className="u"> °C</span></span></div>
+          <div className="kv"><span className="k">כיסוי ירוק</span><span className="v">{fmt(prof.values.green_cover, 'green_cover')}<span className="u"> %</span></span></div>
+          <div className="kv"><span className="k">תכסית</span><span className="v">{fmt(prof.values.bld_coverage, 'bld_coverage')}<span className="u"> %</span></span></div>
+        </div>
       </div>
       {checks.map(c => (
-        <div key={c.title} className={`tone ${c.ok ? 'tone-solution' : 'tone-problem'}`}>
-          <h4>{c.title}: {c.ok ? 'עומד' : 'לא עומד'}</h4>
-          <Rich as="p">{`הקרוב ביותר: **${isFinite(c.d) ? Math.round(c.d) : '—'} מ'**. ${c.src}`}</Rich>
+        <div key={c.title} className={`tone ${TONE[c.lv]}`}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+            <h4>{c.title}: <span style={{ color: colorOf(c.lv) }}>{WORD[c.lv]}</span></h4>
+            <span style={{ fontSize: 22, color: colorOf(c.lv) }}><b className="num">{isFinite(c.d) ? Math.round(c.d) : '—'}</b> מ'</span>
+          </div>
+          <Rich as="p">{c.src}</Rich>
         </div>
       ))}
     </>

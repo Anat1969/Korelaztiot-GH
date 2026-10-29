@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { pearson, rng, fr } from '../lib/stats';
+import AutoNumbers from '../components/AutoNumbers';
 
 /** Synthetic sample with a target correlation, for the interactive explainer. */
 function sample(rho: number, n = 80) {
@@ -41,7 +42,7 @@ export default function Method({ embedded = false }: { embedded?: boolean }) {
         <p className="lead">קורלציה היא מספר אחד שמסכם כמה שני משתנים נעים יחד. במרחב עירוני המספר הזה מטעה בקלות. המעבדה מחשבת אותו, ומיד אחר כך מנסה להפיל אותו בשש בדיקות.</p>
       </div>
       <div style={{ margin: '28px 0', maxWidth: 900 }}><Demo /></div>
-      <div className="prose">
+      <AutoNumbers className="prose">
         <h2>יחידות ניתוח</h2>
         <p>כל משתנה מחושב לשלוש רמות: 35 הרובעים בגבולות הרשמיים של ה-GIS העירוני, 75 משושי H3 ברזולוציה 8 (כ-0.7 קמ"ר), ו-530 משושים ברזולוציה 9 (כ-0.1 קמ"ר). משושים אחידים בשטח ואינם תלויים בגבולות מנהליים. רובעים הם היחידה שבה מתקבלות החלטות. ברמה 1 של הכלי, החישוב נעשה על רשת 8 על 8 שנגזרה מגבולות המסך, ולכן הזזת המפה שינתה את התוצאה. כאן היחידות קבועות.</p>
 
@@ -67,7 +68,7 @@ export default function Method({ embedded = false }: { embedded?: boolean }) {
         <p>Jackknife: מחשבים את r שוב, בכל פעם בלי יחידה אחרת. אם יחידה אחת מזיזה את התוצאה, הממצא שלה ולא של העיר.</p>
         <h3>6. עקביות בין קני מידה</h3>
         <p>בעיית יחידת השטח המשתנה (MAUP, ‏Openshaw 1984). קשר שמתהפך בין רובעים למשושים אינו בסיס להחלטה.</p>
-        <p>הציון הוא ממוצע גיאומטרי משוקלל של שש הבדיקות, ולכן בדיקה אחת שנכשלה מורידה אותו גם כשהאחרות טובות. 70 ומעלה: אפשר להישען. 45 עד 70: כיוון לבדיקה. מתחת ל-45: לא לבסס החלטה.</p>
+        <p><mark className="insight">הציון הוא ממוצע גיאומטרי משוקלל של שש הבדיקות</mark>, ולכן בדיקה אחת שנכשלה מורידה אותו גם כשהאחרות טובות. 70 ומעלה: אפשר להישען. 45 עד 70: כיוון לבדיקה. מתחת ל-45: לא לבסס החלטה.</p>
 
         <h2>מעבר למספר אחד</h2>
         <ul>
@@ -81,7 +82,7 @@ export default function Method({ embedded = false }: { embedded?: boolean }) {
         <p>מנוע הסטטיסטיקה נבדק בבדיקות אוטומטיות מול SciPy: Pearson, ‏Spearman עם ערכים שווים, התפלגות t, פונקציית בטא ותיקון Benjamini-Hochberg תואמים עד 9 ספרות אחרי הנקודה. מבחני התמורות וה-bootstrap רצים עם זרע קבוע, ולכן אותו קישור מחזיר אותה תוצאה. כל תאריך צילום וגרסת נתונים מוצגים בדף "מה חדש".</p>
 
         <h2>מה הכלי לא עושה</h2>
-        <p>מתאם אינו סיבתיות. המעבדה מראה איפה לחפש ומה לבדוק, ולא מה גרם למה. נתוני Overture תלויים במיפוי פתוח ועלולים להיות חסרים בשכונות חדשות. גבולות הרובעים בשטחים לא מבונים (נמל, פארקים, משולש חקלאי) כוללים מעט מאוד אוכלוסייה.</p>
+        <p><mark className="insight">מתאם אינו סיבתיות.</mark> המעבדה מראה איפה לחפש ומה לבדוק, ולא מה גרם למה. נתוני Overture תלויים במיפוי פתוח ועלולים להיות חסרים בשכונות חדשות. גבולות הרובעים בשטחים לא מבונים (נמל, פארקים, משולש חקלאי) כוללים מעט מאוד אוכלוסייה.</p>
 
         <h2>מקורות</h2>
         <ol className="refs">
@@ -96,7 +97,7 @@ export default function Method({ embedded = false }: { embedded?: boolean }) {
           <li>Ewing, R., Cervero, R. (2010). Travel and the built environment. JAPA, 76(3).</li>
         </ol>
         <p style={{ marginTop: 30 }}><Link className="btn" to="/lab">למעבדה</Link></p>
-      </div>
+      </AutoNumbers>
     </div>
   );
 }

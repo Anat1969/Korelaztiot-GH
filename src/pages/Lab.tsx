@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import CityMap, { type Basemap } from '../components/CityMap';
 import Scatter from '../components/Scatter';
 import Reliability from '../components/Reliability';
+import Rich from '../components/Rich';
+import Light, { levelOfP, levelOfScore, toneOf } from '../components/Light';
 import VariableSelect from '../components/VariableSelect';
 import { toast } from '../components/Toast';
 import { column, loadUnits, UNIT_TYPES, type Unit, type UnitType } from '../lib/data';
@@ -200,23 +202,35 @@ export default function Lab() {
         {res && story && rel && (
           <>
             <motion.div className="card pad" key={xKey + yKey + unit + control} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="eyebrow">{busy ? 'מחשב מחדש' : 'ממצא'}</div>
-              <h3 style={{ margin: '6px 0 12px' }} data-testid="headline">{story.headline}</h3>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
-                <div className="r-big" style={{ color: res.r >= 0 ? 'var(--pos)' : 'var(--neg)' }} data-testid="r-value">{fr(res.r, 2, true)}</div>
-                <div className="small muted" style={{ paddingBottom: 6 }}>Pearson r<br />{res.n} יחידות</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                <div className="eyebrow">{busy ? 'מחשב מחדש' : 'ממצא'}</div>
+                <Light level={levelOfScore(rel.score)}>אמינות {rel.score}</Light>
               </div>
-              <div className="statgrid" style={{ marginTop: 14 }}>
-                <div><div className="k">Spearman ρ</div><div className="v">{fr(res.rho)}</div></div>
-                <div><div className="k">p מתוקן מרחבית</div><div className="v">{fmtP(res.pSpatial)}</div></div>
-                <div><div className="k">p רגיל / תמורות</div><div className="v">{fmtP(res.p)} / {fmtP(res.pPerm)}</div></div>
-                <div><div className="k">n אפקטיבי</div><div className="v">{res.nEff.toFixed(0)}</div></div>
-                <div><div className="k">רווח סמך 95%</div><div className="v">{fr(res.ci[0])} עד {fr(res.ci[1])}</div></div>
-                <div><div className="k">bootstrap</div><div className="v">{isFinite(res.ciBoot[0]) ? `${fr(res.ciBoot[0])} עד ${fr(res.ciBoot[1])}` : 'לא חושב'}</div></div>
-                <div><div className="k">Moran's I של X / Y</div><div className="v">{fr(res.moranX)} / {fr(res.moranY)}</div></div>
-                <div><div className="k">R²</div><div className="v">{(res.reg.r2 * 100).toFixed(0)}%</div></div>
-                {control && <div style={{ gridColumn: '1 / -1' }}><div className="k">r חלקי בשליטה על {VAR[control].name}</div><div className="v">{res.partialR != null ? `${fr(res.partialR)} (p ${fmtP(res.partialP)})` : 'אין נתון'}</div></div>}
+              <h3 className="insight-line" style={{ margin: '8px 0 4px' }} data-testid="headline">{story.headline}</h3>
+              <Rich as="p" className="explain">{story.explain}</Rich>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18, flexWrap: 'wrap', margin: '14px 0 4px' }}>
+                <div className="kv"><span className="k">PEARSON r</span><span className="r-big" style={{ color: res.r >= 0 ? 'var(--pos)' : 'var(--neg)' }} data-testid="r-value">{fr(res.r, 2, true)}</span></div>
+                <div className="kv"><span className="k">P מרחבי</span><span className="v" style={{ color: `var(--tl-${levelOfP(res.pSpatial)})` }}>{fmtP(res.pSpatial)}</span></div>
+                <div className="kv"><span className="k">R²</span><span className="v">{(res.reg.r2 * 100).toFixed(0)}%</span></div>
+                <div className="kv"><span className="k">יחידות</span><span className="v">{res.n}</span></div>
               </div>
+              {control && res.partialR != null && (
+                <div className={`tone ${toneOf(levelOfP(res.partialP))}`} style={{ margin: '10px 0', padding: '10px 12px' }}>
+                  <Rich as="p">{`בשליטה על **${VAR[control].name}**: מתאם חלקי **${fr(res.partialR)}**, מובהקות **${fmtP(res.partialP)}**.`}</Rich>
+                </div>
+              )}
+              <details style={{ marginTop: 8 }}>
+                <summary className="hint" style={{ cursor: 'pointer' }}>כל המדדים הסטטיסטיים</summary>
+                <div className="statgrid" style={{ marginTop: 8 }}>
+                  <div><div className="k">Spearman ρ</div><div className="v">{fr(res.rho)}</div></div>
+                  <div><div className="k">p רגיל / תמורות</div><div className="v" style={{ color: `var(--tl-${levelOfP(res.p)})` }}>{fmtP(res.p)} / {fmtP(res.pPerm)}</div></div>
+                  <div><div className="k">n אפקטיבי</div><div className="v">{res.nEff.toFixed(0)}</div></div>
+                  <div><div className="k">רווח סמך 95%</div><div className="v">{fr(res.ci[0])} עד {fr(res.ci[1])}</div></div>
+                  <div><div className="k">bootstrap</div><div className="v">{isFinite(res.ciBoot[0]) ? `${fr(res.ciBoot[0])} עד ${fr(res.ciBoot[1])}` : 'לא חושב'}</div></div>
+                  <div><div className="k">Moran's I של X / Y</div><div className="v">{fr(res.moranX)} / {fr(res.moranY)}</div></div>
+                  {control && <div style={{ gridColumn: '1 / -1' }}><div className="k">r חלקי בשליטה על {VAR[control].name}</div><div className="v">{res.partialR != null ? `${fr(res.partialR)} (p ${fmtP(res.partialP)})` : 'אין נתון'}</div></div>}
+                </div>
+              </details>
               <div style={{ marginTop: 14 }}>
                 <Scatter xs={res.idx.map(i => xsCol[i]!)} ys={res.idx.map(i => ysCol[i]!)} colors={res.idx.map(i => colors[i] ?? '')}
                   res={res} xKey={xKey} yKey={yKey} hovered={hoverK} onHover={k => setHover(k == null ? null : res.idx[k])}
@@ -237,22 +251,22 @@ export default function Lab() {
               )}
             </motion.div>
             <div className="card pad"><Reliability score={rel.score} parts={rel.parts} /></div>
-            <div className="card pad text-block" data-testid="story">
-              <div className="eyebrow">פרשנות</div>
-              <p style={{ marginTop: 8 }}>{story.finding}</p>
-              <p>{story.meaning}</p>
-              {story.domain && <p className="muted small">{story.domain}</p>}
-              <div className="lbl" style={{ marginTop: 12 }}>הסתייגויות</div>
-              <ul>{story.caveats.map((c, i) => <li key={i}>{c}</li>)}</ul>
-              <div className="lbl" style={{ marginTop: 12 }}>הצעד הבא</div>
-              <p>{story.action}</p>
-              {!control && xKey !== 'dist_water' && yKey !== 'dist_water' && (
-                <button className="btn ghost small" onClick={() => set({ c: 'dist_water' })}>בדיקה בשליטה על המרחק מהים</button>
-              )}
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-                <button className="btn small" onClick={save}>שמירת הממצא</button>
+            <div className="grid" style={{ gap: 10 }} data-testid="story">
+              <div className={`tone ${toneOf(levelOfP(res.pSpatial))}`}><h4>מה נמצא</h4><Rich as="p">{story.finding}</Rich></div>
+              <div className="tone tone-insight"><h4>מה זה אומר</h4><Rich as="p">{story.meaning}</Rich></div>
+              <div className="tone tone-mid"><h4>מה לבדוק לפני מסקנה</h4>
+                <ul style={{ margin: 0, paddingInlineStart: 18 }}>{story.caveats.map((c, i) => <Rich key={i} as="li">{c}</Rich>)}</ul>
+              </div>
+              <div className="tone tone-solution"><h4>הצעד הבא</h4><Rich as="p">{story.action}</Rich>
+                {!control && xKey !== 'dist_water' && yKey !== 'dist_water' && (
+                  <button className="btn small" style={{ marginTop: 10 }} onClick={() => set({ c: 'dist_water' })}>בדיקה בשליטה על המרחק מהים</button>
+                )}
+              </div>
+              {story.domain && <div className="card flat pad"><div className="lbl">מה ידוע מהמחקר</div><Rich as="p" className="small">{story.domain}</Rich></div>}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Link className="btn small" to={`/plan?tab=rules&r=${encodeURIComponent(`${xKey}|${yKey}`)}&u=${unit}`}>לכלל תכנון</Link>
                 <Link className="btn ghost small" to={`/know?tab=matrix&u=${unit}`}>כל הקשרים במטריצה</Link>
-                <Link className="btn ghost small" to={`/plan?tab=rules&r=${encodeURIComponent(`${xKey}|${yKey}`)}&u=${unit}`}>לכלל תכנון</Link>
+                <button className="btn quiet" onClick={save} title="שומר את הממצא בספרייה: משותפת במצב עריכה, אחרת בדפדפן הזה">שמירת הממצא</button>
               </div>
             </div>
           </>

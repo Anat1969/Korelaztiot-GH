@@ -4,6 +4,7 @@ import VerbHead from '../components/VerbHead';
 import { loadMeta, loadUnits, UNIT_TYPES, type Meta, type UnitType } from '../lib/data';
 import { FAMILIES, VARIABLES } from '../lib/variables';
 import { toast } from '../components/Toast';
+import SortTable from '../components/SortTable';
 
 const Findings = lazy(() => import('./Findings'));
 const Updates = lazy(() => import('./Updates'));
@@ -65,21 +66,14 @@ function Data() {
       </div>
       <section className="card pad">
         <div className="eyebrow">מילון הנתונים: {VARIABLES.length} משתנים</div>
-        <div style={{ overflowX: 'auto' }}>
-          <table className="small" style={{ borderCollapse: 'collapse', width: '100%', marginTop: 8 }}>
-            <thead><tr>{['משתנה', 'מפתח', 'יחידה', 'תחום', 'מקור', 'הגדרה'].map(h => <th key={h} style={{ textAlign: 'start', padding: '6px 8px', borderBottom: '1px solid var(--line-2)' }}>{h}</th>)}</tr></thead>
-            <tbody>{VARIABLES.map(v => (
-              <tr key={v.key} style={{ borderBottom: '1px solid var(--line)' }}>
-                <td style={{ padding: '6px 8px' }}>{v.name}</td>
-                <td className="mono" style={{ padding: '6px 8px', direction: 'ltr', textAlign: 'start' }}>{v.key}</td>
-                <td style={{ padding: '6px 8px' }}>{v.unit}</td>
-                <td style={{ padding: '6px 8px' }}><span className="dot" style={{ background: FAMILIES[v.family].color }} /> {FAMILIES[v.family].name}</td>
-                <td style={{ padding: '6px 8px' }} className="muted">{v.source}</td>
-                <td style={{ padding: '6px 8px' }} className="muted">{v.about}</td>
-              </tr>
-            ))}</tbody>
-          </table>
-        </div>
+        <SortTable testid="dictionary" rows={VARIABLES} group={v => FAMILIES[v.family].name}
+          groupLabel={g => g} cols={[
+            { key: 'name', label: 'משתנה', value: v => v.name, render: v => <b style={{ fontWeight: 600 }}>{v.name}</b> },
+            { key: 'key', label: 'מפתח', value: v => v.key, render: v => <span className="mono" style={{ direction: 'ltr', display: 'inline-block' }}>{v.key}</span> },
+            { key: 'unit', label: 'יחידה', value: v => v.unit },
+            { key: 'source', label: 'מקור', value: v => v.source },
+            { key: 'about', label: 'הגדרה', value: v => v.about },
+          ]} />
         <p className="small muted" style={{ marginTop: 12 }}>רישיונות: Overture Maps (ODbL ו-CDLA), Copernicus Sentinel-2 (שימוש חופשי עם ייחוס), Landsat (נחלת הכלל, USGS), data.gov.il (רישיון פתוח), ASHDODMAP (עיריית אשדוד).</p>
       </section>
     </div>

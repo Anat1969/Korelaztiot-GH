@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DyZJNswf.js";var t=e(),n=e=>e==null||!isFinite(e)?`bad`:e<.05?`good`:e<.1?`mid`:`bad`,r=e=>e>=70?`good`:e>=45?`mid`:`bad`,i=e=>e===`good`?`tone-solution`:e===`mid`?`tone-mid`:`tone-problem`,a=e=>`var(--tl-${e})`;function o({level:e,children:n}){return(0,t.jsx)(`span`,{className:`tl tl-${e}`,children:n})}export{i as a,r as i,a as n,n as r,o as t};

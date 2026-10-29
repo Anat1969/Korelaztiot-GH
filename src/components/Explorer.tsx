@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { motion } from 'motion/react';
 import Rich from './Rich';
+import SortTable from './SortTable';
 import MiniMap from './MiniMap';
 import { UNIT_TYPES, type Unit, type UnitType } from '../lib/data';
 import { FAMILIES, MATRIX_KEYS, VAR, fmt, type Family } from '../lib/variables';
@@ -116,17 +117,20 @@ export default function Explorer() {
             <div className="eyebrow">טיפולוגיות: {out.km.centers.length} סוגי אזורים</div>
             <p className="small muted">חלוקה אוטומטית (k-means) של היחידות לפי השכבות שבחרת. כל צבע הוא סוג של מקום.</p>
             <div className="two">
-              <div className="mini" style={{ border: '1px solid var(--line)', background: 'var(--bg-2)' }}><MiniMap units={units!} colors={out.clusterColor} title="מפת טיפולוגיות" /></div>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="small" style={{ borderCollapse: 'collapse', width: '100%' }}>
-                  <thead><tr><th style={{ textAlign: 'start' }}>סוג</th>{sel.map(k => <th key={k} style={{ fontWeight: 400, padding: 4 }}>{VAR[k].short}</th>)}</tr></thead>
-                  <tbody>{out.km.centers.map((c, j) => (
-                    <tr key={j}>
-                      <td style={{ padding: '6px 4px' }}><span className="dot" style={{ background: CLUSTER[j] }} /> {out.names[j]} <span className="muted num">{out.sizes[j]}</span></td>
-                      {c.map((v, t) => <td key={t} className="num" style={{ textAlign: 'center', padding: 4, background: v > 0 ? `rgba(200,56,44,${Math.min(0.6, Math.abs(v) / 2.5)})` : `rgba(43,111,158,${Math.min(0.6, Math.abs(v) / 2.5)})` }}>{fr(v, 1, true)}</td>)}
-                    </tr>
-                  ))}</tbody>
-                </table>
+              <div>
+                <div className="mini" style={{ border: '1px solid var(--line)', background: 'var(--bg-2)' }}><MiniMap units={units!} colors={out.clusterColor} title="מפת טיפולוגיות" /></div>
+                <div className="mini-legend">{out.names.map((n, j) => <span key={j}><i style={{ background: CLUSTER[j] }} />{n}</span>)}</div>
+              </div>
+              <div>
+              <SortTable testid="typology-table" initial={{ key: 'n', dir: -1 }}
+                rows={out.km.centers.map((c, j) => ({ j, c, name: out.names[j], n: out.sizes[j] }))}
+                cols={[
+                  { key: 'name', label: 'סוג אזור', value: r => r.name, render: r => <><span className="dot" style={{ background: CLUSTER[r.j] }} /> {r.name}</> },
+                  { key: 'n', label: 'יחידות', value: r => r.n, num: true, render: r => <b className="num">{r.n}</b> },
+                  ...sel.map((k, t) => ({ key: k, label: VAR[k].short, num: true, value: (r: { c: number[] }) => r.c[t],
+                    render: (r: { c: number[] }) => <span className="num" style={{ display: 'block', textAlign: 'center', padding: 2, background: r.c[t] > 0 ? `rgba(200,56,44,${Math.min(0.6, Math.abs(r.c[t]) / 2.5)})` : `rgba(43,111,158,${Math.min(0.6, Math.abs(r.c[t]) / 2.5)})` }}>{fr(r.c[t], 1, true)}</span> })),
+                ]} />
+              <p className="hint">ערך בתא: כמה סטיות תקן הסוג רחוק מממוצע העיר. אדום מעל, כחול מתחת.</p>
               </div>
             </div>
           </section>

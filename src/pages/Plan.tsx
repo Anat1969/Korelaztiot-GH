@@ -12,6 +12,7 @@ import { discoveries, loadScales, toRule, type Rule, type Scales } from '../lib/
 import { multiRegression } from '../lib/discover';
 import { quantileColors, SEQ_RAMP } from '../lib/color';
 import { fr } from '../lib/stats';
+import Light, { levelOfScore } from '../components/Light';
 
 const CityMap = lazy(() => import('../components/CityMap'));
 const TABS = [{ k: 'rules', label: 'כללים מועמדים' }, { k: 'twin', label: 'תאום עירוני: מה אם' }];
@@ -71,8 +72,11 @@ function Rules() {
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <span className={`kind kind-${r.kind}`}>{KIND_NAME[r.kind]}</span>
                   <span className="small muted">כלל מועמד · {UNIT_TYPES.find(u => u.key === r.scale)?.short}</span>
+                  <Light level={levelOfScore(r.reliability)}>אמינות {r.reliability}</Light>
                 </div>
-                <h3 className="insight-line" style={{ margin: '10px 0 12px' }}>{r.insight}</h3>
+                <h3 className="insight-line" style={{ margin: '10px 0 4px' }}>{r.insight}</h3>
+                <Rich as="p" className="explain" >{r.explain}</Rich>
+                <div style={{ height: 12 }} />
                 <div className="grid" style={{ gap: 8 }}>
                   <div className="tone tone-neutral" style={{ padding: '10px 12px' }}><h4>אם</h4><Rich as="p">{r.condition}</Rich></div>
                   <div className="tone tone-insight" style={{ padding: '10px 12px' }}><h4>אז</h4><Rich as="p">{r.effect}</Rich></div>
@@ -81,16 +85,16 @@ function Rules() {
               </div>
               <div>
                 <div className="lbl">איפה הכלל חשוב ({r.applies.length} יחידות)</div>
-                <div className="mini" style={{ border: '1px solid var(--line)', background: 'var(--bg-2)' }}><MiniMap units={units} colors={colors} title="יחידות שבהן הכלל חשוב" /></div>
+                <div className="mini" style={{ border: '1px solid var(--line)', background: 'var(--bg-2)', maxWidth: 360 }}><MiniMap units={units} colors={colors} title="יחידות שבהן הכלל חשוב" /></div>
+                <div className="mini-legend"><span><i style={{ background: '#c8382c' }} />הכלל חשוב כאן</span><span><i style={{ background: '#d9dcde' }} />שאר העיר</span></div>
                 <div style={{ marginTop: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span className="lbl">אמינות</span><b className="num">{r.reliability}</b></div>
-                  <div className="meter" style={{ height: 6 }}><i style={{ width: `${r.reliability}%`, background: r.reliability >= 70 ? 'var(--ok)' : r.reliability >= 45 ? 'var(--warn)' : 'var(--bad)' }} /></div>
-                  <Rich as="p" className="small muted">{`${r.explain} q **${fr(r.d.q, 3)}**, n אפקטיבי **${Math.round(r.d.nEff)}**, ${r.d.consistent ? 'עקבי בקני המידה' : 'לא עקבי בקני המידה'}.`}</Rich>
+                  <div className="meter" style={{ height: 6 }}><i style={{ width: `${r.reliability}%`, background: `var(--tl-${levelOfScore(r.reliability)})` }} /></div>
+                  <Rich as="p" className="small muted">{`מובהקות מתוקנת **${fr(r.d.q, 3)}** · יחידות בלתי תלויות **${Math.round(r.d.nEff)}** · ${r.d.consistent ? 'עקבי בשלושת קני המידה' : 'לא עקבי בקני המידה'}`}</Rich>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                  <button className="btn small" onClick={() => adopt(r)}>אימוץ הכלל</button>
-                  <Link className="btn ghost small" to={`/plan?tab=twin&y=${r.y}&d=${[r.x, ...(r.control ? [r.control] : [])].join(',')}`}>בדיקה בתאום</Link>
+                  <Link className="btn small" to={`/plan?tab=twin&y=${r.y}&d=${[r.x, ...(r.control ? [r.control] : [])].join(',')}`}>בדיקה בתאום</Link>
                   <Link className="btn ghost small" to={`/lab?x=${r.x}&y=${r.y}&u=${r.scale}${r.control ? `&c=${r.control}` : ''}`}>במעבדה</Link>
+                  <button className="btn quiet" onClick={() => adopt(r)} title="שומר את הכלל בספריית הממצאים, עם המספרים של היום">אימוץ הכלל</button>
                 </div>
               </div>
             </div>

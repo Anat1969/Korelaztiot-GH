@@ -4,9 +4,12 @@ import { motion } from 'motion/react';
 import { listUpdates, saveUpdate, editorKey, type Update } from '../lib/store';
 import { loadMeta, type Meta } from '../lib/data';
 import { toast } from '../components/Toast';
+import Rich from '../components/Rich';
 
 // The release notes that ship with the code. Entries added from the editor menu are stored in Supabase (kr_updates).
 const BUILT_IN: Update[] = [
+  { id: 'v3.1', version: '3.1', kind: 'feature', published_at: '2026-10-29T21:00:00Z', title: 'קריאה במבט: תובנה, הסבר, מספר',
+    body: '==כל ממצא נקרא בשלוש שניות==: **שורת תובנה**, משפט הסבר ומספרים בולטים. **רמזור** לאמינות ולמובהקות, **מקרא** לכל מפה, **טבלאות ממוינות**, תמונות של מבני שימור, וקישורים לאפליקציות העירוניות הקשורות.' },
   { id: 'v3.0', version: '3.0', kind: 'feature', published_at: '2026-10-29T20:00:00Z', title: 'כלי אחד לשש פעולות: מדידה, ידיעה, הבנה, תכנון, למידה, שימוש',
     body: 'Urban Pulse נבלעה כ"מדידה": פרופיל לכל נקודה בעיר מול העיר ומול תקני הליכה. מנוע גילוי סורק כל זוג שכבות, מנטרל עוצמה עירונית, ומוצא קשרים נסתרים, ספים וקשרים לא ליניאריים. כל תגלית הופכת לכלל תכנון מועמד, ותאום עירוני מחשב תרחישי מה אם. נוספו תחנות האוטובוס של משרד התחבורה ומדדי נגישות לגן, לגן ילדים ולתחבורה.' },
   { id: 'v3.0-design', version: '3.0', kind: 'fix', published_at: '2026-10-29T20:00:00Z', title: 'שפת העיצוב הקנונית',
@@ -73,7 +76,7 @@ export default function Updates({ embedded = false }: { embedded?: boolean }) {
                 <span className="tag">{KIND[u.kind]}</span><span className="mono small muted">גרסה {u.version} · {new Date(u.published_at).toLocaleDateString('he-IL')}</span>
               </div>
               <h3 style={{ margin: '10px 0 6px' }}>{u.title}</h3>
-              {u.body && <p className="muted" style={{ margin: 0 }}>{u.body}</p>}
+              {u.body && <Rich as="p" className="explain">{u.body}</Rich>}
             </div>
           </motion.div>
         ))}

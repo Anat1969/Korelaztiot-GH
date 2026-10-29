@@ -1,7 +1,8 @@
 import { motion } from 'motion/react';
 import type { ReliabilityPart } from '../lib/stats';
+import Rich from './Rich';
 
-const tone = (s: number) => (s >= 70 ? 'var(--ok)' : s >= 45 ? 'var(--warn)' : 'var(--bad)');
+const tone = (s: number) => (s >= 70 ? 'var(--tl-good)' : s >= 45 ? 'var(--tl-mid)' : 'var(--tl-bad)');
 const word = (s: number) => (s >= 70 ? 'אפשר להישען על הממצא' : s >= 45 ? 'כיוון לבדיקה, לא מסקנה' : 'לא לבסס החלטה על הממצא');
 
 export default function Reliability({ score, parts }: { score: number; parts: ReliabilityPart[] }) {
@@ -10,7 +11,7 @@ export default function Reliability({ score, parts }: { score: number; parts: Re
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
         <div>
           <div className="eyebrow">מדד אמינות</div>
-          <div style={{ color: tone(score), fontSize: 15 }}>{word(score)}</div>
+          <div style={{ color: tone(score), fontSize: 18, fontWeight: 600 }}>{word(score)}</div>
         </div>
         <div className="mono" style={{ fontSize: 40, color: tone(score), lineHeight: 1 }}>{score}</div>
       </div>
@@ -23,7 +24,7 @@ export default function Reliability({ score, parts }: { score: number; parts: Re
           <div className="part" key={p.key}>
             <div style={{ fontSize: 13.5 }}>{p.label}</div>
             <div className="meter" style={{ height: 6 }}><i style={{ width: `${Math.round(p.score * 100)}%`, background: tone(p.score * 100) }} /></div>
-            <div className="note">{p.note}</div>
+            <Rich as="div" className="note">{p.note}</Rich>
           </div>
         ))}
       </div>
