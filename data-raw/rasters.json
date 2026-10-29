@@ -1,0 +1,14 @@
+{
+ "landsat": {
+  "id": "LC09_L2SP_174038_20260801_02_T1",
+  "date": "2026-08-01",
+  "cloud": 0.0,
+  "stac": "planetarycomputer.microsoft.com, landsat-c2-l2, lwir11"
+ },
+ "sentinel2": {
+  "id": "S2C_T36SXA_20260802T082553_L2A",
+  "date": "2026-08-02",
+  "cloud": 0.021228,
+  "stac": "earth-search.aws.element84.com/v1, sentinel-2-c1-l2a"
+ }
+}

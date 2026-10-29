@@ -1,0 +1,32 @@
+{
+ "generated": "2026-10-29T18:30+00:00",
+ "overture": "2026-10-21.0",
+ "sentinel2": {
+  "id": "S2C_T36SXA_20260802T082553_L2A",
+  "date": "2026-08-02",
+  "cloud": 0.021228,
+  "stac": "earth-search.aws.element84.com/v1, sentinel-2-c1-l2a"
+ },
+ "landsat": {
+  "id": "LC09_L2SP_174038_20260801_02_T1",
+  "date": "2026-08-01",
+  "cloud": 0.0,
+  "stac": "planetarycomputer.microsoft.com, landsat-c2-l2, lwir11"
+ },
+ "counts": {
+  "buildings": 26365,
+  "places": 2918,
+  "segments": 13975,
+  "landuse": 1519,
+  "kinder": 578,
+  "schools": 194,
+  "early": 103,
+  "shimur": 34,
+  "plans": 18
+ },
+ "units": {
+  "quarters": 35,
+  "h3-8": 75,
+  "h3-9": 530
+ }
+}
