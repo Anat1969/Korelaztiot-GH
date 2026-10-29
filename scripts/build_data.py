@@ -19,6 +19,7 @@ from pyproj import Transformer
 
 RAW = Path('data-raw'); OUT = Path('public/data'); OUT.mkdir(parents=True, exist_ok=True)
 to_m = Transformer.from_crs('EPSG:4326', 'EPSG:2039', always_xy=True).transform  # Israel TM Grid, metres
+def m_area(g): return stransform(to_m, g).area
 
 def load(name): return json.load(open(RAW / f'{name}.json'))
 
@@ -68,7 +69,7 @@ def cats(hier, *keys):
     return any(k in h for k in keys)
 
 ex = load('mt_existing')
-def ex_pts(*subs): return [shape(e['geom']) for e in ex if e['subtype'] in subs and e.get('geom')]
+def ex_pts(*subs): return [g for g in (shape(e['geom']) for e in ex if e['subtype'] in subs and e.get('geom')) if not g.is_empty]
 kinder = ex_pts('גן ילדים', 'גן ילדים פרטי')
 schools = ex_pts('בית ספר', 'מוסד חינוך')
 early = ex_pts('מעון יום', 'משפחתון')
@@ -116,6 +117,35 @@ wa, wtr, wtf, _ = rasters['ndwi']
 water_rc = np.argwhere(np.nan_to_num(wa, nan=-1) > 0.15)
 water_xy = np.array([wtr * (int(c) + .5, int(r) + .5) for r, c in water_rc[::4]]) if len(water_rc) else np.zeros((0, 2))
 
+# ---------- access: share of buildings within a walking distance ----------
+# Distances in metres on the Israeli TM grid. Building centroids stand in for homes and workplaces.
+from scipy.spatial import cKDTree
+from shapely.ops import unary_union
+to_m_arr = lambda pts: np.array([to_m(x, y) for x, y in pts]) if len(pts) else np.zeros((0, 2))
+bld_xy = to_m_arr([(g[0].representative_point().x, g[0].representative_point().y) for g in bld])
+stops = load('transit_stops')
+stop_xy = to_m_arr([(t['lng'], t['lat']) for t in stops])
+park_polys = [lg for lg, sub, cls in landuse if (cls in {'park', 'garden', 'playground', 'recreation_ground', 'village_green', 'dog_park', 'nature_reserve'})]
+park_union = unary_union([g.buffer(0) for g in park_polys]) if park_polys else None
+parks_big = [p for p in (getattr(park_union, 'geoms', [park_union]) if park_union else []) if m_area(p) >= 5000]  # WHO: at least 0.5 ha
+park_m = [stransform(to_m, p) for p in parks_big]
+# sample park edges every 25 m so "distance to the park" is distance to its edge, not its centre
+edge_pts = []
+for pm in park_m:
+    for ring in ([pm.exterior] + list(pm.interiors)):
+        L = ring.length
+        edge_pts += [ring.interpolate(d).coords[0] for d in np.arange(0, L, 25)]
+edge_xy = np.array(edge_pts) if edge_pts else np.zeros((0, 2))
+kinder_xy = to_m_arr([(p.x, p.y) for p in kinder])
+def near(src, dst):
+    if not len(dst) or not len(src): return np.full(len(src), np.inf)
+    return cKDTree(dst).query(src)[0]
+bld_d_bus = near(bld_xy, stop_xy)
+bld_d_park = near(bld_xy, edge_xy)
+bld_d_kinder = near(bld_xy, kinder_xy)
+bld_tree_pts = [g[0].representative_point() for g in bld]
+bld_ptree = STRtree(bld_tree_pts)
+
 # ---------- spatial indexes ----------
 def tree(gs): return STRtree(gs) if gs else None
 T = dict(bld=tree([g[0] for g in bld]), places=tree([g[0] for g in places]), segs=tree([g[0] for g in segs]), landuse=tree([g[0] for g in landuse]))
@@ -124,7 +154,6 @@ PARK = {'park', 'garden', 'playground', 'recreation_ground', 'pitch', 'grass', '
 ROAD = {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'residential', 'living_street', 'unclassified', 'service'}
 WALK = {'footway', 'pedestrian', 'path', 'steps', 'cycleway', 'living_street'}
 
-def m_area(g): return stransform(to_m, g).area
 
 def indicators(u):
     g = u['geom']; gm = stransform(to_m, g); A = gm.area / 1e6  # km2
@@ -190,6 +219,13 @@ def indicators(u):
     if len(water_xy):
         cx, cy = wtf(c.x, c.y)
         r['dist_water'] = float(np.min(np.hypot(water_xy[:, 0] - cx, water_xy[:, 1] - cy))) / 1000
+    # access, over the buildings whose centroid is in the unit
+    bi = bld_ptree.query(g, predicate='contains')
+    if len(bi) >= 3:
+        r['bus_access'] = 100 * float(np.mean(bld_d_bus[bi] <= 400))
+        r['green_access'] = 100 * float(np.mean(bld_d_park[bi] <= 300))
+        r['kinder_access'] = 100 * float(np.mean(bld_d_kinder[bi] <= 400))
+    r['bus_density'] = sum(1 for t in stops if g.contains(Point(t['lng'], t['lat']))) / A
     r['area'] = A
     return r
 
@@ -218,12 +254,28 @@ for k, us in units.items():
     json.dump(out, open(OUT / f'units-{k}.json', 'w'), ensure_ascii=False, separators=(',', ':'))
     print(k, len(out))
 
+# ---------- points for the place profile (measure page) ----------
+def ll(p): return [round(p.x, 5), round(p.y, 5)]
+def ok(p): return p is not None and not p.is_empty
+pl_cat = lambda *keys: [ll(p[0]) for p in places if ok(p[0]) and p[0].geom_type == 'Point' and cats(p[3], *keys)]
+points = dict(
+    bus=[[round(t['lng'], 5), round(t['lat'], 5)] for t in stops],
+    kinder=[ll(p) for p in kinder if ok(p)], school=[ll(p) for p in schools if ok(p)], early=[ll(p) for p in early if ok(p)],
+    shimur=[[round(b['lng'], 5), round(b['lat'], 5), b['name']] for b in load('shimur_buildings') if b.get('lat')],
+    renewal=[[round(p[0].x, 5), round(p[0].y, 5), q.get('title'), max(0, (q.get('units_planned') or 0) - (q.get('units_existing') or 0))] for p, q in zip(plan_pts, [q for q in plans if center_pt(q['center']) is not None])],
+    food=pl_cat('food_and_drink', 'eat_and_drink'), health=pl_cat('health'), retail=pl_cat('shopping', 'retail'),
+    parks=[[*ll(p.representative_point()), round(m_area(p) / 10000, 2)] for p in parks_big],
+    streets=[[s_['name'], round(s_['center'][1], 5), round(s_['center'][0], 5)] for s_ in load('cl_streets') if s_.get('center')],
+)
+json.dump(points, open(OUT / 'points.json', 'w'), ensure_ascii=False, separators=(',', ':'))
+print('points', {k: len(v) for k, v in points.items()})
+
 json.dump(dict(city=simplify(city)), open(OUT / 'city.json', 'w'), separators=(',', ':'))
 meta = dict(
     generated=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='minutes'),
     overture=open(RAW / 'overture_release.txt').read().strip() if (RAW / 'overture_release.txt').exists() else '2026-10-21.0',
     sentinel2=rmeta['sentinel2'], landsat=rmeta['landsat'],
-    counts=dict(buildings=len(bld), places=len(places), segments=len(segs), landuse=len(landuse), kinder=len(kinder), schools=len(schools), early=len(early), shimur=len(shimur), plans=len(plan_pts)),
+    counts=dict(bus_stops=len(stops), big_parks=len(parks_big), buildings=len(bld), places=len(places), segments=len(segs), landuse=len(landuse), kinder=len(kinder), schools=len(schools), early=len(early), shimur=len(shimur), plans=len(plan_pts)),
     units={k: len(v) for k, v in units.items()},
 )
 json.dump(meta, open(OUT / 'meta.json', 'w'), ensure_ascii=False, indent=1)

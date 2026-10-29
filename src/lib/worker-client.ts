@@ -1,5 +1,6 @@
 import type { Num, PairResult } from './stats';
 import type { MatrixCell } from './stats.worker';
+import type { Discovery, ScanInput } from './discover';
 
 let w: Worker | null = null;
 let seq = 0;
@@ -25,3 +26,5 @@ export const runMatrix = (keys: string[], cols: Num[][], coords: [number, number
   call<{ cells: (MatrixCell | null)[][]; moran: number[] }>({ kind: 'matrix', keys, cols, coords });
 
 export type { MatrixCell };
+
+export const runScan = (input: ScanInput) => call<{ res: Discovery[] }>({ kind: 'scan', input }).then(d => d.res);

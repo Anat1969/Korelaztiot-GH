@@ -1,0 +1,25 @@
+# Builds app/ (relative paths, hash routing) on every push to main, so the latest merge can be seen at
+# https://raw.githack.com/Anat1969/Korelaztiot-GH/main/app/index.html even before or without Vercel.
+name: build-app
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['app/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: npm install --no-audit --no-fund --legacy-peer-deps
+      - run: npm run build:github
+      - name: Commit app/ when it changed
+        run: |
+          git config user.name "korelaztiot-app-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add app
+          git diff --cached --quiet && echo "no change" || (git commit -m "Build app/ for raw.githack" && git push)

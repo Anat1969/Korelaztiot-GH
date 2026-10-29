@@ -1,10 +1,20 @@
+ההנחיות הכלליות והסקיל הקנוני: https://github.com/Anat1969/Claude-GH (CLAUDE.md, ‏`.claude/skills/anat-app-builder`, ‏`.claude/skills/anat-design-language`). הקובץ הזה מוסיף רק את מה שייחודי לאפליקציה.
+
 # קורלציות (Korelaztiot-GH)
 
-מעבדה עירונית לעיריית אשדוד: מצליבה מדדי לוויין, בינוי, תנועה, שירותים, חינוך ותכנון ברמת רובע ומשושה, ומודדת את מהימנות כל קשר.
-לפני כל שינוי: לקרוא את הקובץ הזה. אחרי כל תיקון של ענת: להוסיף אותו כאן, בסעיף "תיקונים של ענת".
+כלי עירוני אחד לעיריית אשדוד, בשש פעולות: **מדידה** (פרופיל מקום), **ידיעה** (מנוע גילוי), **הבנה** (מעבדה), **תכנון** (כללים ותאום עירוני), **למידה** (מסלולים ושיטה), **שימוש** (ממצאים ונתונים).
+החזון: להראות תלות תכנונית בין שכבות שלכאורה לא קשורות, לגזור ממנה כללי תכנון חדשים, ולבנות בדרך עיר תאומה.
+כתובת: https://korelaztiot.vercel.app · מיזוג אחרון בלי Vercel: https://raw.githack.com/Anat1969/Korelaztiot-GH/main/app/index.html
+
+## תעודת DNA
+- **מטאפורה:** שולחן אור של מתכנן: שכבות שקופות של אותה עיר שמונחות זו על זו עד שמתגלה דפוס.
+- **חומר:** אקטטה וזכוכית חלבית על נייר אדריכלי, עם רשת מונוספייס.
+- **צבעים:** ים (`--sea`) לקריר ולקשר שלילי, חום (`--heat`) לחם ולקשר חיובי, חולות (`--dune`) לניטרלי, אקטטה (`--acetate`) לשכבה, ובנוסף צבעי הלוגו של העירייה.
+- **תנועה:** שכבות נפרדות ומתיישרות (registration), משושים נוחתים במקומם ועוברים ממפה לתרשים.
+- **מקור השראה:** איאן מקהרג (Ian McHarg), ‏Design with Nature, ‏1969: שיטת השכבות השקופות.
 
 ## בעלות ולוגו
-- האפליקציה שייכת לעיריית אשדוד. כפתור הלוגו: `<ai-menu brand="ashdod" chat="...">` (תקן: github.com/Anat1969/AppOfApp-GH/blob/main/docs/ai-menu-standard.md).
+- בעלות ולוגו: עיריית אשדוד. האפליקציה שייכת לעיריית אשדוד. כפתור הלוגו: `<ai-menu brand="ashdod" chat="...">` (תקן: github.com/Anat1969/AppOfApp-GH/blob/main/docs/ai-menu-standard.md).
 - לוגו העירייה מופיע גם בדף הנחיתה (`public/ashdod-logo.png`, הועתק מ-appofapp-gh.vercel.app/ashdod-logo.png).
 - בסרגל העליון רק: שם האפליקציה (קישור לדף הבית), ניווט תוכן, וכפתור הלוגו. פעולות עריכה נכנסות דרך `menu.items` ב-`src/components/Layout.tsx`.
 
@@ -13,12 +23,17 @@
 - Supabase: פרויקט ASHDODMAP (`cbhexpybdggwzyakgagd`), משותף לאפליקציות עירוניות. כל הטבלאות והפונקציות בקידומת `kr_`.
 
 ## מבנה
-- `scripts/` צנרת נתונים (Python): `fetch_muni.py` (ASHDODMAP), `fetch_overture.py` (Overture Maps דרך DuckDB), `fetch_rasters.py` (Landsat 9 מ-Planetary Computer, Sentinel-2 מ-Earth Search), `build_data.py` (מדדים לכל יחידה) -> `public/data/*.json`.
+- איחוד: Urban Pulse (Lovable `799fc2eb`, חיפוש כתובת ושכבות ברדיוס) נבלעה כדף "מדידה". קורלציות 1.0 (Lovable `38833bd3`) היא הבסיס של "הבנה".
+- `src/lib/discover.ts` מנוע הגילוי: dCor, נקודת שבירה, Mann-Whitney, רגרסיה מרובה, מתאם חלקי, k-means, וסריקה של כל הזוגות שמנטרלת מדד עוצמה עירונית (`URBAN_KEYS` ב-`config.ts`). `tests/discover.test.ts` משווה ל-NumPy ול-SciPy.
+- `src/lib/engine.ts` טוען את שלושת קני המידה פעם אחת, מריץ סריקה ב-Worker, וגוזר כללים (`toRule`).
+- `scripts/` צנרת נתונים (Python): `fetch_muni.py` (ASHDODMAP ותחנות משרד התחבורה), `fetch_overture.py` (Overture Maps דרך DuckDB), `fetch_rasters.py` (Landsat 9 מ-Planetary Computer, Sentinel-2 מ-Earth Search), `build_data.py` (מדדים לכל יחידה) -> `public/data/*.json`.
 - `.github/workflows/refresh-data.yml` מריץ את הצנרת ב-2 לכל חודש, בודק build ובדיקות, ודוחף ל-main (פריסה אוטומטית).
 - `src/lib/stats.ts` מנוע סטטיסטי טהור; `stats.worker.ts` מריץ אותו ב-Web Worker. `tests/stats.test.ts` משווה ל-SciPy.
 - `src/lib/variables.ts` קטלוג המשתנים (שם, יחידה, מקור, הסבר). משתנה חדש: להוסיף ל-`build_data.py` ולקטלוג.
 - `src/lib/narrative.ts` פרשנות בעברית. `src/lib/store.ts` ממצאים ועדכונים ב-Supabase עם גיבוי מקומי.
-- דפים: נחיתה, מעבדה, מטריצה, אטלס, ממצאים, שיטה, מה חדש.
+- דפים: נחיתה, `/measure`, `/know`, `/lab`, `/plan`, `/learn`, `/use`. כתובות 2.0 (`/matrix`, `/atlas`, `/findings`, `/method`, `/updates`) מפנות לכלי המקביל.
+- `npm run build:github` בונה ל-`app/` עם נתיב יחסי וניתוב hash. `.github/workflows/build-app.yml` מריץ אותו על כל דחיפה ל-main, ו-`ignoreCommand` ב-`vercel.json` מדלג על קומיט שמשנה רק את `app/`.
+- רשום ב-aoa_apps (פרויקט `ktqmwpbzcnzkhjskqisy`), רשומה `app-1776256582262`.
 
 ## עריכה
 - אין Google OAuth בפרויקט. עריכה לפי מפתח עורך: `?edit=<key>` בכתובת שומר את המפתח בדפדפן ומוחק אותו מהכתובת. בבסיס הנתונים נשמר רק hash (`kr_editor_keys`), והכתיבה רק דרך פונקציות `kr_save_finding`, `kr_remove_finding`, `kr_save_update` (security definer).
@@ -28,7 +43,7 @@
 - `npm test` (סטטיסטיקה מול SciPy), `npm run build`, `npm run e2e` (Playwright מול vite preview: כל הדפים, כל הכפתורים, אין גלילה אופקית בנייד, אין שגיאות התקנה, כפתור הלוגו קיים ואין כפתורי פיתוח חופשיים בסרגל).
 - Vercel: פרויקט `korelaztiot`, ענף הייצור main.
 
-## מלכודות שנפתרו
+## למדנו בבנייה
 - MapLibre 6 מריץ worker מקובץ נפרד. אחרי bundling צריך `setWorkerUrl` עם `maplibre-gl-worker.mjs?url` (ב-`CityMap.tsx`). בלעדיו המפה ריקה.
 - `map.isStyleLoaded()` מחזיר false כל עוד אריחים נטענים. לא להתנות בו הוספת שכבות; להסתמך על `style.load`.
 - מספרים שליליים ו-"<" מתהפכים ב-RTL. כל מספר שמוצג עובר דרך `fr()` / `fmt()` / `fmtP()` שעוטפים אותו ב-LRI/PDI.
@@ -37,7 +52,12 @@
 - פיקסלי ים הופכים את הקשר בין צמחייה לחום. כל מדדי הלוויין מחושבים על יבשה בלבד (NDWI > 0 מוסתר). Sentinel-2 נבחר לפי קרבה בזמן לצילום ה-Landsat.
 - גובה מבנים ב-Overture ידוע רק לכ-3% מהמבנים באשדוד, ולכן אין מדד גובה או FAR.
 - `pkill -f "vite preview"` בתוך פקודה שמכילה את אותה מחרוזת הורג את המעטפת עצמה.
-- Overpass ו-Open-Meteo חסומים מסביבת הבנייה. Overture ו-STAC זמינים.
+- Overpass ו-Open-Meteo חסומים מסביבת הבנייה. Overture, ‏STAC ו-data.gov.il זמינים.
+- רוב הקשרים בעיר הם "עוד עיר". בלי ניטרול של מדד עוצמה עירונית, ראש רשימת התגליות מלא בזוגות צפויים (מבנים וצמתים). אחרי הניטרול עולים קשרים נסתרים אמיתיים.
+- בקנה מידה של משושים גדולים הצמחייה כמעט לא מקררת (המרחק מהים שולט). ברמת הרובע היא כן. לכן התאום העירוני נפתח ברובעים, ויש בו בחירת קנה מידה.
+- ב-`Rich`, מקף אחרי אות עברית ("בכ-20") אינו סימן מינוס.
+- מיגרציה בלי `drop policy` עוברת בלי שאלת אישור.
 
-## תיקונים של ענת
-- (עוד אין)
+## יומן תיקונים
+- 29.10.2026: "רמה 1 לרמה 999": שדרוג מ-Lovable, פריסה ב-Vercel, לוגו העירייה, ASHDODMAP.
+- 29.10.2026: החזון: תלות תכנונית בין שכבות שלא נראות קשורות, כללים חדשים, עיר תאומה. שתי דרכים: המכונה מזהה, והמשתמש בוחר שכבות. איחוד עם Urban Pulse. אוריינטציה של כלים למדידה, ידיעה, תכנון, הבנה, למידה ושימוש.

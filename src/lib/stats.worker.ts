@@ -1,9 +1,11 @@
 // Heavy statistics off the main thread: pair analysis (permutations, bootstrap, LISA) and the full matrix.
 import { analysePair, benjaminiHochberg, effectiveN, knnWeights, moranI, pairsOf, pearson, pFromR, type Num } from './stats';
+import { scan, type ScanInput } from './discover';
 
 export type Req =
   | { id: number; kind: 'pair'; x: Num[]; y: Num[]; coords: [number, number][]; control?: Num[] }
-  | { id: number; kind: 'matrix'; keys: string[]; cols: Num[][]; coords: [number, number][] };
+  | { id: number; kind: 'matrix'; keys: string[]; cols: Num[][]; coords: [number, number][] }
+  | { id: number; kind: 'scan'; input: ScanInput };
 
 export interface MatrixCell { r: number; n: number; nEff: number; p: number; q: number }
 
@@ -12,6 +14,10 @@ self.onmessage = (e: MessageEvent<Req>) => {
   if (m.kind === 'pair') {
     const res = analysePair({ x: m.x, y: m.y, coords: m.coords, control: m.control, seed: 20261029 });
     (self as unknown as Worker).postMessage({ id: m.id, res });
+    return;
+  }
+  if (m.kind === 'scan') {
+    (self as unknown as Worker).postMessage({ id: m.id, res: scan(m.input) });
     return;
   }
   // matrix: Moran's I per variable once, on the units where it is defined

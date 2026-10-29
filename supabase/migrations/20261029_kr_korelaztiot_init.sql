@@ -27,8 +27,12 @@ create table if not exists public.kr_findings (
 );
 comment on table public.kr_findings is 'קורלציות: ממצאים שמורים מהמעבדה העירונית, עיריית אשדוד';
 alter table public.kr_findings enable row level security;
-drop policy if exists kr_findings_read on public.kr_findings;
-create policy kr_findings_read on public.kr_findings for select to anon, authenticated using (status = 'published' and deleted_at is null);
+-- no "drop policy": it triggers a confirmation prompt; create only when missing
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'kr_findings' and policyname = 'kr_findings_read') then
+    create policy kr_findings_read on public.kr_findings for select to anon, authenticated using (status = 'published' and deleted_at is null);
+  end if;
+end $$;
 
 create table if not exists public.kr_updates (
   id uuid primary key default gen_random_uuid(),
@@ -40,8 +44,11 @@ create table if not exists public.kr_updates (
   deleted_at timestamptz
 );
 alter table public.kr_updates enable row level security;
-drop policy if exists kr_updates_read on public.kr_updates;
-create policy kr_updates_read on public.kr_updates for select to anon, authenticated using (deleted_at is null);
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'kr_updates' and policyname = 'kr_updates_read') then
+    create policy kr_updates_read on public.kr_updates for select to anon, authenticated using (deleted_at is null);
+  end if;
+end $$;
 
 create or replace function public.kr_editor(p_key text) returns text
 language sql stable security definer set search_path = public, extensions as $$
@@ -93,3 +100,6 @@ grant select on public.kr_findings, public.kr_updates to anon, authenticated;
 
 -- editor key hash only; the key itself is never stored
 insert into public.kr_editor_keys (label, key_hash) values ('ענת שטיבלמן', 'dfa64d82de1b9b8a71bc83c1a68aa5e547f51f777af61a9161e58daf2c785706') on conflict (key_hash) do nothing;
+
+-- the key table is read only by the security definer functions; keep it out of the public API schema
+revoke all on table public.kr_editor_keys from anon, authenticated;

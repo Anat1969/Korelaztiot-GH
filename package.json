@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "build:github": "vite build --base=./ --outDir app --emptyOutDir",
     "preview": "vite preview --port 4173",
     "test": "vitest run",
     "e2e": "NODE_PATH=$(npm root -g) node tests/e2e.mjs",

@@ -17,7 +17,7 @@ function Demo() {
   const r = pearson(pts.map(p => p[0]), pts.map(p => p[1]));
   return (
     <div className="card pad" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 20, alignItems: 'center' }}>
-      <svg viewBox="-3.4 -3.4 6.8 6.8" style={{ width: '100%', direction: 'ltr', background: 'linear-gradient(160deg, var(--bg-2), var(--paper))', borderRadius: 12 }} aria-label="הדגמת מקדם מתאם">
+      <svg viewBox="-3.4 -3.4 6.8 6.8" style={{ width: '100%', direction: 'ltr', background: 'linear-gradient(160deg, var(--bg-2), var(--paper))' }} aria-label="הדגמת מקדם מתאם">
         <line x1="-3.2" x2="3.2" y1="0" y2="0" stroke="var(--line-2)" strokeWidth="0.02" />
         <line y1="-3.2" y2="3.2" x1="0" x2="0" stroke="var(--line-2)" strokeWidth="0.02" />
         {pts.map((p, i) => <motion.circle key={i} r={0.08} fill={rho >= 0 ? 'var(--pos)' : 'var(--neg)'} fillOpacity={0.75} animate={{ cx: p[0], cy: -p[1] }} transition={{ type: 'spring', stiffness: 120, damping: 16 }} />)}
@@ -32,9 +32,9 @@ function Demo() {
   );
 }
 
-export default function Method() {
+export default function Method({ embedded = false }: { embedded?: boolean }) {
   return (
-    <div className="page">
+    <div className={embedded ? '' : 'page'}>
       <div className="prose">
         <div className="eyebrow">שיטה</div>
         <h2 style={{ marginTop: 10 }}>איך המעבדה מחשבת, ואיך היא בודקת את עצמה</h2>

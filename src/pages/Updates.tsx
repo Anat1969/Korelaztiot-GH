@@ -7,6 +7,10 @@ import { toast } from '../components/Toast';
 
 // The release notes that ship with the code. Entries added from the editor menu are stored in Supabase (kr_updates).
 const BUILT_IN: Update[] = [
+  { id: 'v3.0', version: '3.0', kind: 'feature', published_at: '2026-10-29T20:00:00Z', title: 'כלי אחד לשש פעולות: מדידה, ידיעה, הבנה, תכנון, למידה, שימוש',
+    body: 'Urban Pulse נבלעה כ"מדידה": פרופיל לכל נקודה בעיר מול העיר ומול תקני הליכה. מנוע גילוי סורק כל זוג שכבות, מנטרל עוצמה עירונית, ומוצא קשרים נסתרים, ספים וקשרים לא ליניאריים. כל תגלית הופכת לכלל תכנון מועמד, ותאום עירוני מחשב תרחישי מה אם. נוספו תחנות האוטובוס של משרד התחבורה ומדדי נגישות לגן, לגן ילדים ולתחבורה.' },
+  { id: 'v3.0-design', version: '3.0', kind: 'fix', published_at: '2026-10-29T20:00:00Z', title: 'שפת העיצוב הקנונית',
+    body: 'כפתורים מרובעים ולחיצים, טקסט עשיר עם מרקר תובנה, צבעי בעיה ופתרון, ותעודת DNA: שולחן האור של מקהרג.' },
   { id: 'v2.0', version: '2.0', kind: 'feature', published_at: '2026-10-29', title: 'קורלציות 2.0: מעבדה עירונית לאשדוד',
     body: 'מעבר מכלי GIS כללי למעבדה עירונית של אשדוד. 25 מדדים לשלוש יחידות ניתוח קבועות במקום רשת שתלויה במסך. תיקון לאוטוקורלציה מרחבית, מבחן תמורות, bootstrap, קורלציה חלקית, אשכולות מקומיים, מטריצה עם תיקון לבדיקות מרובות, ומדד אמינות לכל ממצא. מפה תלת-ממדית, אטלס, ספריית ממצאים, התקנה כאפליקציה.' },
   { id: 'v2.0-data', version: '2.0', kind: 'data', published_at: '2026-10-29', title: 'נתוני לוויין אמיתיים במקום מדד AQI',
@@ -18,7 +22,7 @@ const BUILT_IN: Update[] = [
 ];
 const KIND: Record<Update['kind'], string> = { feature: 'יכולת', data: 'נתונים', fix: 'תיקון' };
 
-export default function Updates() {
+export default function Updates({ embedded = false }: { embedded?: boolean }) {
   const [sp, setSp] = useSearchParams();
   const [remote, setRemote] = useState<Update[] | null>(null);
   const [meta, setMeta] = useState<Meta | null>(null);
@@ -30,7 +34,7 @@ export default function Updates() {
   const all = [...(remote ?? []), ...BUILT_IN].sort((a, b) => b.published_at.localeCompare(a.published_at));
 
   return (
-    <div className="page">
+    <div className={embedded ? '' : 'page'}>
       <div className="eyebrow">מה חדש</div>
       <h2 style={{ margin: '8px 0 12px' }}>עדכונים, נתונים וגרסאות</h2>
       <p className="lead">הנתונים מתעדכנים אוטומטית בתחילת כל חודש: הגרסה החדשה של Overture, והצילומים הבהירים האחרונים של Sentinel-2 ו-Landsat. כשיש גרסה חדשה של האפליקציה, תופיע הודעה ולחיצה אחת תטען אותה.</p>
@@ -45,7 +49,7 @@ export default function Updates() {
       {editing && (
         <form className="card pad grid" style={{ maxWidth: 720, marginBottom: 24 }} onSubmit={async e => {
           e.preventDefault();
-          if (await saveUpdate({ ...draft, published_at: new Date().toISOString() })) { toast('העדכון פורסם'); setSp({}); load(); } else toast('הפרסום נכשל');
+          if (await saveUpdate({ ...draft, published_at: new Date().toISOString() })) { toast('העדכון פורסם'); const n = new URLSearchParams(sp); n.delete('new'); setSp(n, { replace: true }); load(); } else toast('הפרסום נכשל');
         }}>
           <div className="eyebrow">עדכון חדש</div>
           <div style={{ display: 'grid', gridTemplateColumns: '120px minmax(0,1fr)', gap: 10 }}>

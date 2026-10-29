@@ -7,7 +7,7 @@ import { runMatrix, type MatrixCell } from '../lib/worker-client';
 import { rColor } from '../lib/color';
 import { fmtP, fr } from '../lib/stats';
 
-export default function Matrix() {
+export default function Matrix({ embedded = false }: { embedded?: boolean }) {
   const [sp, setSp] = useSearchParams();
   const unit = (UNIT_TYPES.find(u => u.key === sp.get('u'))?.key ?? 'h3-8') as UnitType;
   const onlySig = sp.get('s') !== '0';
@@ -32,10 +32,11 @@ export default function Matrix() {
   const set = (k: string, v: string) => { const n = new URLSearchParams(sp); n.set(k, v); setSp(n, { replace: true }); };
   const t = tip && cells?.[tip.i][tip.j];
 
+  const Wrap = embedded ? 'div' : 'section';
   return (
-    <div className="page">
-      <div className="eyebrow">מטריצת קשרים</div>
-      <h2 style={{ margin: '8px 0 12px' }}>כל המשתנים מול כל המשתנים</h2>
+    <Wrap className={embedded ? '' : 'page'}>
+      {!embedded && <><div className="eyebrow">מטריצת קשרים</div>
+      <h2 style={{ margin: '8px 0 12px' }}>כל המשתנים מול כל המשתנים</h2></>}
       <p className="lead">{MATRIX_KEYS.length} משתנים, {(MATRIX_KEYS.length * (MATRIX_KEYS.length - 1)) / 2} זוגות. כשבודקים כל כך הרבה זוגות, חלק ייראו מובהקים במקרה. לכן כל זוג מתוקן גם לאוטוקורלציה מרחבית וגם לבדיקות מרובות (Benjamini-Hochberg). לחיצה על תא פותחת אותו במעבדה.</p>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '18px 0' }}>
         <div className="seg" role="group" aria-label="יחידת ניתוח">{UNIT_TYPES.map(u => <button key={u.key} aria-pressed={unit === u.key} onClick={() => set('u', u.key)}>{u.short}</button>)}</div>
@@ -85,6 +86,6 @@ export default function Matrix() {
           {cells && !top.length && <div className="muted" style={{ marginTop: 10 }}>אין קשרים שעמדו בכל התיקונים בקנה המידה הזה.</div>}
         </div>
       </div>
-    </div>
+    </Wrap>
   );
 }
