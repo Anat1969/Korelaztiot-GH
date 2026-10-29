@@ -304,3 +304,16 @@ table.sort tr.group td { background: var(--bg-2); font-weight: 600; font-family:
 .photo-card { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; align-items: center; padding: 8px; text-decoration: none; }
 .photo-card img { width: 96px; height: 72px; object-fit: cover; display: block; border: 1px solid var(--line); }
 @media (max-width: 720px) { .verbhead { grid-template-columns: minmax(0, 1fr); } .verbhead .verb { font-size: 44px; } }
+
+/* ---------- aligned card grids (Anat, 29.10.2026: "יישור הכרטיסיות בגריד של קווים אופקיים") ----------
+   Every card in a row shares the same horizontal lines: the container defines the rows once and each card
+   takes them through subgrid, so titles, sub-titles, text and numbers sit on one line across the row.
+   Cards fade in only (no vertical travel), so a row never looks broken while it animates. */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--min, 280px)), 1fr)); column-gap: 14px; row-gap: 0; align-items: stretch; }
+.cards > * { display: grid; grid-template-rows: subgrid; grid-row: span var(--rows, 3); row-gap: 8px; align-content: start; margin: 0 0 14px; min-width: 0; }
+.cards > * > * { margin-top: 0; margin-bottom: 0; min-width: 0; }
+.cards > .tone { row-gap: 6px; }
+.fade { animation: fade .5s ease both; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.cards > .fade:nth-child(2) { animation-delay: .06s; } .cards > .fade:nth-child(3) { animation-delay: .12s; }
+.cards > .fade:nth-child(4) { animation-delay: .18s; } .cards > .fade:nth-child(5) { animation-delay: .24s; } .cards > .fade:nth-child(6) { animation-delay: .3s; }

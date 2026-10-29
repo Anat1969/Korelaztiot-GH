@@ -29,6 +29,27 @@ const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));
 page.on('console', m => { if (m.type() === 'error' && !/tiles|arcgis|fonts|Failed to load resource|WebGL|GPU/i.test(m.text())) errors.push(m.text()); });
+// Every card in a row shares the same horizontal lines: same top, same height, and the n-th line of
+// each card on the same y. Returns the worst misalignment in px over all .cards grids on the page.
+const misalign = () => page.evaluate(() => {
+  let worst = 0;
+  for (const grid of document.querySelectorAll('.cards')) {
+    const cards = [...grid.children].filter(c => c.getBoundingClientRect().height > 0);
+    const rows = new Map();
+    for (const c of cards) { const t = Math.round(c.getBoundingClientRect().top); rows.set(t, [...(rows.get(t) || []), c]); }
+    for (const row of rows.values()) {
+      if (row.length < 2) continue;
+      const h = row.map(c => c.getBoundingClientRect().height);
+      worst = Math.max(worst, Math.max(...h) - Math.min(...h));
+      const n = Math.min(...row.map(c => c.children.length));
+      for (let k = 0; k < n; k++) {
+        const ys = row.map(c => c.children[k].getBoundingClientRect().top);
+        worst = Math.max(worst, Math.max(...ys) - Math.min(...ys));
+      }
+    }
+  }
+  return Math.round(worst);
+});
 const go = async (path, wait) => { await page.goto(BASE + path, { waitUntil: 'load' }); if (wait) await page.waitForSelector(wait, { timeout: 30000 }).catch(() => {}); };
 
 // ---------- landing ----------
@@ -47,6 +68,10 @@ await page.waitForSelector('.finding-row', { timeout: 30000 }).catch(() => {});
 ok(await page.locator('.finding-row').count() >= 3, 'live discoveries on the landing page');
 const radius = await page.evaluate(() => [...document.querySelectorAll('.btn, .seg button, .check, .nav a')].map(e => getComputedStyle(e).borderTopLeftRadius).filter(r => r !== '0px').length);
 ok(radius === 0, `square buttons everywhere (${radius} rounded)`);
+await page.locator('[data-testid="verbs"]').scrollIntoViewIfNeeded();
+await page.waitForTimeout(800);
+const mLanding = await misalign();
+ok(mLanding <= 1, `landing cards on shared horizontal lines (${mLanding}px)`);
 await page.locator('.check').first().hover();
 await page.waitForTimeout(400);
 await page.screenshot({ path: `${SHOTS}/01-landing.png` });
@@ -77,6 +102,9 @@ ok(await page.locator('[data-testid="atlas"] .card').count() >= 24, 'atlas tab i
 // ---------- know ----------
 await go('/know', '[data-testid="discoveries"] article');
 ok(await page.locator('[data-testid="discoveries"] article').count() >= 3, 'discovery engine returns cards');
+await page.waitForTimeout(800);
+const mKnow = await misalign();
+ok(mKnow <= 1, `discovery cards on shared horizontal lines (${mKnow}px)`);
 await page.screenshot({ path: `${SHOTS}/03-know.png` });
 ok(await page.locator('[data-testid="discoveries"] .mini-legend').count() >= 3, 'every discovery map has a legend');
 ok(await page.locator('[data-testid="discoveries"] .tl').count() >= 3, 'reliability as a traffic light');
@@ -156,6 +184,9 @@ await page.screenshot({ path: `${SHOTS}/06-twin.png` });
 // ---------- learn ----------
 await go('/learn', '[data-testid="tours"] article');
 ok(await page.locator('[data-testid="tours"] article').count() === 4, 'four learning tours');
+await page.waitForTimeout(800);
+const mLearn = await misalign();
+ok(mLearn <= 1, `tour cards on shared horizontal lines (${mLearn}px)`);
 await page.locator('text=לשלב הבא').first().click();
 await page.fill('#note-sea', 'הים מקרר יותר מהעצים');
 await page.waitForTimeout(400);
@@ -174,6 +205,9 @@ await go('/use', '[data-testid="findings"] h3');
 ok((await page.locator('[data-testid="findings"]').innerText()).includes('בדפדפן בלבד'), 'saved findings and rules listed');
 await page.click('.tabs >> text=נתונים להורדה');
 await page.waitForSelector('[data-testid="downloads"] button');
+await page.waitForTimeout(600);
+const mUse = await misalign();
+ok(mUse <= 1, `download cards on shared horizontal lines (${mUse}px)`);
 const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('text=CSV לאקסל').first().click()]);
 ok(dl.suggestedFilename().endsWith('.csv'), 'CSV download');
 ok(await page.locator('[data-testid="dictionary"] tr').count() > 25, 'data dictionary');

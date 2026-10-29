@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { motion } from 'motion/react';
 import VerbHead from '../components/VerbHead';
 import Rich from '../components/Rich';
 import MiniScatter from '../components/MiniScatter';
@@ -55,7 +54,7 @@ function Auto({ sp, setSp }: { sp: URLSearchParams; setSp: (p: URLSearchParams, 
 
   return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', marginBottom: 18 }}>
+      <div className="cards" style={{ ['--rows' as string]: 2, ['--min' as string]: '260px', marginBottom: 4 }}>
         <div className="tone tone-problem"><h4>הבעיה</h4><Rich as="p">רוב הקשרים בעיר הם **עוד עיר**: איפה שיש מבנים יש גם כבישים, עסקים ותחנות.</Rich></div>
         <div className="tone tone-solution"><h4>מה המכונה עושה</h4><Rich as="p">בונה מדד **עוצמה עירונית** ומנטרלת אותו. נשאר רק **מה ששורד** את הניטרול.</Rich></div>
         <div className="tone tone-insight"><h4>התוצאה</h4><Rich as="p">==כללי תכנון מועמדים==, כל אחד עם ראיות, קני מידה ומדד אמינות.</Rich></div>
@@ -74,7 +73,7 @@ function Auto({ sp, setSp }: { sp: URLSearchParams; setSp: (p: URLSearchParams, 
       {!res && <div className="card pad muted">סורק את כל הזוגות בשלושה קני מידה</div>}
       {res && !list.length && <div className="card pad">אין תגליות שעומדות בסף בבחירה הזו. נסו קנה מידה אחר או בטלו את הסינון.</div>}
       {view === 'cards' ? (
-        <div className="disc-grid" data-testid="discoveries">
+        <div className="cards" style={{ ['--rows' as string]: 9, ['--min' as string]: '380px' }} data-testid="discoveries">
           {S && list.map((d, i) => <DiscoveryCard key={d.x + d.y} d={d} S={S} scale={scale} i={i} />)}
         </div>
       ) : S && (
@@ -101,14 +100,14 @@ function DiscoveryCard({ d, S, scale, i }: { d: Discovery; S: Scales; scale: Uni
   const fx = FAMILIES[VAR[d.x].family], fy = FAMILIES[VAR[d.y].family];
   const lab = `/lab?x=${d.x}&y=${d.y}&u=${scale}${rule.control ? `&c=${rule.control}` : ''}`;
   return (
-    <motion.article className="card pad" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 3) * 0.06 }}>
+    <article className="card pad fade" style={{ animationDelay: `${(i % 3) * 0.06}s` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
         <span className={`kind kind-${d.kind}`}>{KIND_NAME[d.kind]}</span>
         <Light level={levelOfScore(rule.reliability)}>אמינות {rule.reliability}</Light>
       </div>
-      <h3 className="insight-line" style={{ margin: '12px 0 6px' }}>{rule.insight}</h3>
+      <h3 className="insight-line">{rule.insight}</h3>
       <Rich as="p" className="explain">{rule.explain}</Rich>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8, margin: '10px 0' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8, alignItems: 'start' }}>
         <MiniScatter xs={pts.xs} ys={pts.ys} k={d.kind === 'threshold' ? d.bp?.k : undefined} color={d.r >= 0 ? 'var(--heat)' : 'var(--sea)'} title={`${VAR[d.x].name} מול ${VAR[d.y].name}`} />
         <div className="mini" style={{ border: '1px solid var(--line)', background: 'var(--bg-2)' }}><MiniMap units={units} colors={colors} title="מפה דו-משתנית" /></div>
       </div>
@@ -126,14 +125,14 @@ function DiscoveryCard({ d, S, scale, i }: { d: Discovery; S: Scales; scale: Uni
       <div className="small muted" style={{ marginTop: 6 }}>
         {d.scales.map(s => <span key={s.key} style={{ marginInlineEnd: 10 }}>{UNIT_TYPES.find(u => u.key === s.key)?.short} <b className="num" style={{ color: s.r >= 0 ? 'var(--pos)' : 'var(--neg)' }}>{fr(s.r, 2, true)}</b></span>)}
       </div>
-      <div className="tone tone-solution" style={{ marginTop: 10, padding: '10px 12px' }}>
+      <div className="tone tone-solution" style={{ padding: '10px 12px' }}>
         <Rich as="p">{`**${rule.condition}**, ${rule.effect}.`}</Rich>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignSelf: 'end' }}>
         <Link className="btn small" to={lab}>הבנה במעבדה</Link>
         <Link className="btn ghost small" to={`/plan?tab=rules&r=${encodeURIComponent(rule.id)}&u=${scale}`}>לכלל תכנון</Link>
       </div>
-    </motion.article>
+    </article>
   );
 }
 

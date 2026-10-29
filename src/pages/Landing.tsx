@@ -79,7 +79,7 @@ export default function Landing() {
       </section>
 
       <section className="band" style={{ paddingTop: 20 }}>
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))' }}>
+        <div className="cards" style={{ ['--rows' as string]: 2 }}>
           <div className="tone tone-problem"><h4>הבעיה</h4><Rich as="p">{'כל מחלקה מחזיקה **שכבה משלה**. קשרים בין חום, גנים, תחבורה והתחדשות ==לא נבדקים==.'}</Rich></div>
           <div className="tone tone-solution"><h4>הפתרון</h4><Rich as="p">{'כל השכבות על **אותן יחידות**, ומנוע שסורק **כל זוג** ומנטרל את מה שמובן מאליו.'}</Rich></div>
           <div className="tone tone-insight"><h4>התובנה</h4><Rich as="p">{trap != null ? `ברובעים, בשליטה על הים, הצמחייה מקררת: מתאם חלקי **${fr(trap)}**. ==הים הסתיר את זה==.` : 'טוען דוגמה חיה מהנתונים'}</Rich></div>
@@ -89,17 +89,14 @@ export default function Landing() {
       <section className="band" style={{ paddingTop: 30 }} id="verbs">
         <div className="eyebrow">שש פעולות, כלי אחד</div>
         <h2 style={{ margin: '10px 0 22px' }}>למדוד, לדעת, להבין, לתכנן, ללמוד, להשתמש</h2>
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 14 }}>
+        <div className="cards" style={{ ['--rows' as string]: 4, ['--min' as string]: '340px' }} data-testid="verbs">
           {NAV.map((n, i) => (
-            <motion.div key={n.to} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 3) * 0.07 }}>
-              <Link to={n.to} className="card pad" style={{ display: 'block', textDecoration: 'none', minHeight: 170, position: 'relative' }}>
-                <span className="mono muted" style={{ position: 'absolute', insetInlineEnd: 16, top: 12, fontSize: 40, opacity: 0.25 }}>0{i + 1}</span>
-                <div style={{ fontSize: 34, fontWeight: 200 }}>{n.label}</div>
-                <div className="muted small" style={{ margin: '2px 0 10px' }}>{n.sub}</div>
-                <div>{verbLine[n.to]}</div>
-                <div className="small mono" style={{ marginTop: 10, color: 'var(--accent)' }}>{verbNum[n.to]}</div>
-              </Link>
-            </motion.div>
+            <Link key={n.to} to={n.to} className="card pad fade" style={{ textDecoration: 'none', position: 'relative' }}>
+              <div style={{ fontSize: 34, fontWeight: 200, lineHeight: 1.1 }}>{n.label}<span className="mono muted" style={{ position: 'absolute', insetInlineEnd: 16, top: 12, fontSize: 40, opacity: 0.25 }}>0{i + 1}</span></div>
+              <div className="muted small">{n.sub}</div>
+              <div>{verbLine[n.to]}</div>
+              <div className="small mono" style={{ color: 'var(--accent)', alignSelf: 'end' }}>{verbNum[n.to]}</div>
+            </Link>
           ))}
         </div>
       </section>
@@ -138,7 +135,7 @@ export default function Landing() {
       <section className="band" style={{ paddingTop: 30 }}>
         <div className="eyebrow">מקורות</div>
         <h2 style={{ margin: '10px 0 6px' }}>חמישה מקורות, תאריך לכל אחד</h2>
-        <div className="sources">
+        <div className="cards" style={{ ['--rows' as string]: 3, ['--min' as string]: '210px', marginTop: 30 }} data-testid="sources">
           {[
             ['Landsat 9', meta?.landsat.date, 'טמפרטורת פני שטח, 30 מ\''],
             ['Sentinel-2', meta?.sentinel2.date, 'צמחייה, בינוי ומים, 10 מ\''],

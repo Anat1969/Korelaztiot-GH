@@ -42,11 +42,11 @@ export default function Updates({ embedded = false }: { embedded?: boolean }) {
       <h2 style={{ margin: '8px 0 12px' }}>עדכונים, נתונים וגרסאות</h2>
       <p className="lead">הנתונים מתעדכנים אוטומטית בתחילת כל חודש: הגרסה החדשה של Overture, והצילומים הבהירים האחרונים של Sentinel-2 ו-Landsat. כשיש גרסה חדשה של האפליקציה, תופיע הודעה ולחיצה אחת תטען אותה.</p>
 
-      <div className="sources" style={{ marginBottom: 30 }}>
-        <div className="card flat source"><div className="mono small muted">הנתונים נבנו</div><div className="big">{meta ? new Date(meta.generated).toLocaleDateString('he-IL') : '...'}</div></div>
+      <div className="cards" style={{ ['--rows' as string]: 3, ['--min' as string]: '210px', marginBottom: 16 }}>
+        <div className="card flat source"><div className="mono small muted">הנתונים נבנו</div><div className="big">{meta ? new Date(meta.generated).toLocaleDateString('he-IL') : '...'}</div><div className="small muted">עדכון אוטומטי ב-2 לכל חודש</div></div>
         <div className="card flat source"><div className="mono small muted">Landsat 9</div><div className="big">{meta?.landsat.date ?? '...'}</div><div className="small muted mono">{meta?.landsat.id}</div></div>
         <div className="card flat source"><div className="mono small muted">Sentinel-2</div><div className="big">{meta?.sentinel2.date ?? '...'}</div><div className="small muted mono">{meta?.sentinel2.id}</div></div>
-        <div className="card flat source"><div className="mono small muted">Overture Maps</div><div className="big">{meta?.overture ?? '...'}</div></div>
+        <div className="card flat source"><div className="mono small muted">Overture Maps</div><div className="big">{meta?.overture ?? '...'}</div><div className="small muted">גרסה חודשית</div></div>
       </div>
 
       {editing && (
