@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { motion } from 'motion/react';
 import VerbHead from '../components/VerbHead';
 import Rich from '../components/Rich';
 
@@ -49,7 +48,7 @@ export default function Learn() {
 
 function Tours() {
   return (
-    <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))', gap: 16 }} data-testid="tours">
+    <div className="cards" style={{ ['--rows' as string]: 8, ['--min' as string]: '460px' }} data-testid="tours">
       {TOURS.map((t, i) => <TourCard key={t.id} t={t} i={i} />)}
     </div>
   );
@@ -67,22 +66,22 @@ function TourCard({ t, i }: { t: Tour; i: number }) {
   }, [st]);
   const s = t.steps[Math.min(st.step, t.steps.length - 1)];
   return (
-    <motion.article className="card pad" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+    <article className="card pad fade" style={{ animationDelay: `${i * 0.06}s` }}>
       <div className="eyebrow">מסלול {i + 1}</div>
-      <h3 className="insight-line" style={{ margin: '6px 0' }}>{t.title}</h3>
-      <p className="muted" style={{ marginTop: 0 }}>{t.question}</p>
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${t.steps.length}, minmax(0,1fr))`, gap: 4, margin: '12px 0' }} aria-label="התקדמות">
+      <h3 className="insight-line">{t.title}</h3>
+      <p className="muted">{t.question}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${t.steps.length}, minmax(0,1fr))`, gap: 4 }} aria-label="התקדמות">
         {t.steps.map((x, k) => (
           <button key={k} className="check" aria-pressed={k === st.step} onClick={() => setSt({ ...st, step: k })} style={{ justifyContent: 'center', opacity: k <= st.step ? 1 : 0.6 }}>{x.title}</button>
         ))}
       </div>
       <div className="tone tone-neutral"><Rich as="p">{s.text}</Rich></div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'start' }}>
         <Link className="btn small" to={s.to}>{s.cta}</Link>
         {st.step < t.steps.length - 1 && <button className="btn ghost small" onClick={() => setSt({ ...st, step: st.step + 1 })}>לשלב הבא</button>}
       </div>
-      <label className="lbl" htmlFor={`note-${t.id}`} style={{ marginTop: 14 }}>מה למדתי {saved && <span style={{ color: 'var(--solution)' }}>· נשמר</span>}</label>
+      <label className="lbl" htmlFor={`note-${t.id}`} style={{ alignSelf: 'end' }}>מה למדתי {saved && <span style={{ color: 'var(--solution)' }}>· נשמר</span>}</label>
       <textarea id={`note-${t.id}`} className="field" rows={2} value={st.note} onChange={e => setSt({ ...st, note: e.target.value })} placeholder="משפט אחד: מה הפתיע אותי, ומה אבדוק בשטח." />
-    </motion.article>
+    </article>
   );
 }

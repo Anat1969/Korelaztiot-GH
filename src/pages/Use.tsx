@@ -51,7 +51,7 @@ function Data() {
   }
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 12 }} data-testid="downloads">
+      <div className="cards" style={{ ['--rows' as string]: 4 }} data-testid="downloads">
         {UNIT_TYPES.map(t => (
           <div key={t.key} className="card pad">
             <h3>{t.name}</h3>
