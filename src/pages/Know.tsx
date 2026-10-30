@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import VerbHead from '../components/VerbHead';
+import NextStep from '../components/NextStep';
 import Rich from '../components/Rich';
 import MiniScatter from '../components/MiniScatter';
 import MiniMap from '../components/MiniMap';
@@ -10,7 +11,7 @@ import { KIND_ABOUT, KIND_NAME } from '../lib/config';
 import { discoveries, loadScales, toRule, type Scales } from '../lib/engine';
 import type { Discovery, Kind } from '../lib/discover';
 import { pairsOf, fr } from '../lib/stats';
-import { bivariateColors, BIVAR } from '../lib/color';
+import { bivariateTopic, bivarPalette, topicOf } from '../lib/color';
 import Light, { levelOfScore } from '../components/Light';
 import SortTable from '../components/SortTable';
 
@@ -25,12 +26,13 @@ export default function Know() {
   return (
     <div className="page">
       <VerbHead verb="ידיעה" base="/know" tab={tab} tabs={TABS}
-        line="המכונה סורקת **כל זוג שכבות** בשלושה קני מידה, מנטרלת את **עוצמת העירוניות**, ומחזירה רק את ==מה שלא היינו מחפשים==." />
+        line="המכונה בודקת **כל זוג שכבות** בעיר. היא מתעלמת ממה שמובן מאליו, ש==איפה שיש יותר עיר יש יותר מהכול==. נשאר רק מה שמפתיע." />
       {tab === 'auto' && <Auto sp={sp} setSp={setSp} />}
       <Suspense fallback={<div className="muted">טוען</div>}>
         {tab === 'pick' && <Explorer />}
         {tab === 'matrix' && <Matrix embedded />}
       </Suspense>
+      <NextStep />
     </div>
   );
 }
@@ -55,9 +57,9 @@ function Auto({ sp, setSp }: { sp: URLSearchParams; setSp: (p: URLSearchParams, 
   return (
     <>
       <div className="cards" style={{ ['--rows' as string]: 2, ['--min' as string]: '260px', marginBottom: 4 }}>
-        <div className="tone tone-problem"><h4>הבעיה</h4><Rich as="p">רוב הקשרים בעיר הם **עוד עיר**: איפה שיש מבנים יש גם כבישים, עסקים ותחנות.</Rich></div>
-        <div className="tone tone-solution"><h4>מה המכונה עושה</h4><Rich as="p">בונה מדד **עוצמה עירונית** ומנטרלת אותו. נשאר רק **מה ששורד** את הניטרול.</Rich></div>
-        <div className="tone tone-insight"><h4>התוצאה</h4><Rich as="p">==כללי תכנון מועמדים==, כל אחד עם ראיות, קני מידה ומדד אמינות.</Rich></div>
+        <div className="tone tone-problem"><h4>הבעיה</h4><Rich as="p">{'במרכז העיר יש יותר מבנים, יותר כבישים, יותר עסקים ויותר תחנות. לכן **כמעט הכול קשור להכול**, וזה לא מלמד דבר.'}</Rich></div>
+        <div className="tone tone-solution"><h4>מה המכונה עושה</h4><Rich as="p">{'היא משווה רק **מקומות עירוניים באותה מידה**. אם הקשר נשאר גם ביניהם, הוא באמת קיים.'}</Rich></div>
+        <div className="tone tone-insight"><h4>התוצאה</h4><Rich as="p">{'כל קשר שנשאר הופך ל==כלל תכנון מועמד==. לכל כלל: ראיות, איפה הוא חל, וכמה אפשר לסמוך עליו.'}</Rich></div>
       </div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}>
         <div className="seg" role="group" aria-label="קנה מידה מוביל">{UNIT_TYPES.map(u => <button key={u.key} aria-pressed={scale === u.key} onClick={() => set('u', u.key)}>{u.short}</button>)}</div>
@@ -83,7 +85,7 @@ function Auto({ sp, setSp }: { sp: URLSearchParams; setSp: (p: URLSearchParams, 
               { key: 'pair', label: 'זוג שכבות', value: r => `${VAR[r.d.x].name} ${VAR[r.d.y].name}`, render: r => <Link to={`/lab?x=${r.d.x}&y=${r.d.y}&u=${scale}`}>{VAR[r.d.x].name} ו{VAR[r.d.y].name}</Link> },
               { key: 'insight', label: 'תובנה', value: r => r.rule.insight },
               { key: 'r', label: 'מתאם גולמי', value: r => r.d.r, num: true, render: r => <b className="num">{fr(r.d.r, 2, true)}</b> },
-              { key: 'beyond', label: 'אחרי ניטרול', value: r => (r.d.kind === 'hidden' ? r.d.hidden!.partialR : r.d.beyond), num: true, render: r => <b className="num">{fr(r.d.kind === 'hidden' ? r.d.hidden!.partialR : r.d.beyond, 2, true)}</b> },
+              { key: 'beyond', label: 'באזורים דומים', value: r => (r.d.kind === 'hidden' ? r.d.hidden!.partialR : r.d.beyond), num: true, render: r => <b className="num">{fr(r.d.kind === 'hidden' ? r.d.hidden!.partialR : r.d.beyond, 2, true)}</b> },
               { key: 'rel', label: 'אמינות', value: r => r.rule.reliability, num: true, render: r => <Light level={levelOfScore(r.rule.reliability)}>{r.rule.reliability}</Light> },
             ]} />
         </div>
@@ -96,7 +98,8 @@ function DiscoveryCard({ d, S, scale, i }: { d: Discovery; S: Scales; scale: Uni
   const units = S[scale];
   const rule = useMemo(() => toRule(d, units, scale), [d, units, scale]);
   const pts = useMemo(() => pairsOf(column(units, d.x), column(units, d.y)), [units, d]);
-  const colors = useMemo(() => bivariateColors(column(units, d.x), column(units, d.y)), [units, d]);
+  const colors = useMemo(() => bivariateTopic(d.x, d.y, column(units, d.x), column(units, d.y)), [units, d]);
+  const P = bivarPalette(d.x, d.y);
   const fx = FAMILIES[VAR[d.x].family], fy = FAMILIES[VAR[d.y].family];
   const lab = `/lab?x=${d.x}&y=${d.y}&u=${scale}${rule.control ? `&c=${rule.control}` : ''}`;
   return (
@@ -108,14 +111,17 @@ function DiscoveryCard({ d, S, scale, i }: { d: Discovery; S: Scales; scale: Uni
       <h3 className="insight-line">{rule.insight}</h3>
       <Rich as="p" className="explain">{rule.explain}</Rich>
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8, alignItems: 'start' }}>
-        <MiniScatter xs={pts.xs} ys={pts.ys} k={d.kind === 'threshold' ? d.bp?.k : undefined} color={d.r >= 0 ? 'var(--heat)' : 'var(--sea)'} title={`${VAR[d.x].name} מול ${VAR[d.y].name}`} />
+        <div>
+          <MiniScatter xs={pts.xs} ys={pts.ys} k={d.kind === 'threshold' ? d.bp?.k : undefined} color={topicOf(d.y).hue} title={`${VAR[d.x].name} מול ${VAR[d.y].name}`} />
+          <p className="hint" style={{ margin: '4px 0 0' }}>כל נקודה היא משושה בעיר. ימינה: יותר {VAR[d.x].short}. למעלה: יותר {VAR[d.y].short}.{d.kind === 'threshold' ? ' הקו המקווקו: נקודת המפנה.' : ''}</p>
+        </div>
         <div className="mini" style={{ border: '1px solid var(--line)', background: 'var(--bg-2)' }}><MiniMap units={units} colors={colors} title="מפה דו-משתנית" /></div>
       </div>
       <div className="mini-legend" aria-label="מקרא">
-        <span><i style={{ background: BIVAR[0][2] }} />{VAR[d.x].short} גבוה</span>
-        <span><i style={{ background: BIVAR[2][0] }} />{VAR[d.y].short} גבוה</span>
-        <span><i style={{ background: BIVAR[2][2] }} />שניהם</span>
-        <span><i style={{ background: BIVAR[0][0] }} />שניהם נמוכים</span>
+        <span><i style={{ background: P[0][2] }} />{VAR[d.x].short} גבוה</span>
+        <span><i style={{ background: P[2][0] }} />{VAR[d.y].short} גבוה</span>
+        <span><i style={{ background: P[2][2] }} />שניהם</span>
+        <span><i style={{ background: P[0][0] }} />שניהם נמוכים</span>
       </div>
       <div className="small" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <span><span className="dot" style={{ background: fx.color }} /> {VAR[d.x].name}</span>

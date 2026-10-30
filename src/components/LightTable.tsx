@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import type { Unit } from '../lib/data';
 import { column } from '../lib/data';
 import { project } from './MiniMap';
-import { quantileColors } from '../lib/color';
+import { quantileColors, topicRamp } from '../lib/color';
 import { VAR } from '../lib/variables';
 
 // McHarg's light table (Design with Nature, 1969): transparent layers of the same city,
@@ -12,10 +12,10 @@ const COS = Math.cos(Math.PI / 6), SIN = 0.5;
 const iso = (x: number, y: number, z: number) => [(x - y) * COS, (x + y) * SIN - z] as const;
 
 export const LAYERS = [
-  { k: 'lst', name: 'חום', ramp: ['#fbe9d9', '#f6c9a0', '#ef9c66', '#e06b3a', '#c8382c', '#8f2016'] },
-  { k: 'green_cover', name: 'צמחייה', ramp: ['#f1f3e6', '#d5e6c0', '#a9d08f', '#76b45f', '#4a8f3d', '#2a6526'] },
-  { k: 'bld_coverage', name: 'בינוי', ramp: ['#f4efe9', '#e2d3c2', '#c9ad8f', '#a8835f', '#80603f', '#553e28'] },
-  { k: 'bus_access', name: 'תחבורה', ramp: ['#eef3f8', '#cfe0ee', '#a0c4e0', '#6ea2cc', '#3f7cb2', '#22578c'] },
+  { k: 'lst', name: 'חום', ramp: topicRamp('lst').slice(1) },
+  { k: 'green_cover', name: 'צמחייה', ramp: topicRamp('green_cover').slice(1) },
+  { k: 'bld_coverage', name: 'בינוי', ramp: topicRamp('bld_coverage').slice(1) },
+  { k: 'bus_access', name: 'תחבורה', ramp: topicRamp('bus_access').slice(1) },
 ];
 
 export default function LightTable({ units, active, onActive }: { units: Unit[] | null; active: number | null; onActive: (i: number | null) => void }) {

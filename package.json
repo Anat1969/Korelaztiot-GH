@@ -10,7 +10,8 @@
     "preview": "vite preview --port 4173",
     "test": "vitest run",
     "e2e": "NODE_PATH=$(npm root -g) node tests/e2e.mjs",
-    "data": "python3 scripts/fetch_overture.py && python3 scripts/fetch_rasters.py && python3 scripts/build_data.py"
+    "data": "python3 scripts/fetch_overture.py && python3 scripts/fetch_rasters.py && python3 scripts/build_data.py && npm run thumbs",
+    "thumbs": "tsx scripts/snapshot_thumbs.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",
@@ -25,6 +26,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "tsx": "^4.23.15",
     "typescript": "7.0.2",
     "vite": "8.3.4",
     "vitest": "5.0.4"

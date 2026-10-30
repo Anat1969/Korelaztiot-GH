@@ -10,7 +10,7 @@ export default function Reliability({ score, parts }: { score: number; parts: Re
     <div data-testid="reliability">
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
         <div>
-          <div className="eyebrow">מדד אמינות</div>
+          <div className="eyebrow">כמה אפשר לסמוך על הממצא</div>
           <div style={{ color: tone(score), fontSize: 18, fontWeight: 600 }}>{word(score)}</div>
         </div>
         <div className="mono" style={{ fontSize: 40, color: tone(score), lineHeight: 1 }}>{score}</div>
@@ -19,7 +19,8 @@ export default function Reliability({ score, parts }: { score: number; parts: Re
         <motion.i style={{ background: `linear-gradient(90deg, ${tone(score)}, color-mix(in oklab, ${tone(score)} 60%, white))` }}
           initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 0.9, ease: 'easeOut' }} />
       </div>
-      <div style={{ marginTop: 10 }}>
+      <p className="hint" style={{ margin: '8px 0 0' }}>שש בדיקות. פס מלא וירוק: הבדיקה עברה.</p>
+      <div style={{ marginTop: 6 }}>
         {parts.map(p => (
           <div className="part" key={p.key}>
             <div style={{ fontSize: 13.5 }}>{p.label}</div>

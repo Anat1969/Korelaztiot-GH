@@ -36,7 +36,9 @@ interface Props {
   focus?: [number, number] | null;
 }
 
-export default function CityMap({ units, colors, heights, extrude = false, basemap = 'light', opacity = 0.78, selected = null, onHover, onSelect, label, overlay, onMapClick, focus }: Props) {
+export default function CityMap({ units, colors, heights, extrude = false, basemap = 'light', opacity: opacityProp, selected = null, onHover, onSelect, label, overlay, onMapClick, focus }: Props) {
+  // satellite imagery needs more transparency than a vector basemap, where the city is drawn above the units
+  const opacity = opacityProp ?? (basemap === 'satellite' ? 0.5 : 0.8);
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<MLMap | null>(null);
   const [ready, setReady] = useState(0);
@@ -98,7 +100,9 @@ export default function CityMap({ units, colors, heights, extrude = false, basem
     if (src) src.setData(fc);
     else {
       m.addSource('units', { type: 'geojson', data: fc });
-      const firstSymbol = m.getStyle().layers.find(l => l.type === 'symbol')?.id;
+      // the units go under the city: buildings, roads and names are drawn on top, so Ashdod stays readable
+      const layers = m.getStyle().layers;
+      const firstSymbol = (layers.find(l => l.id === 'building') ?? layers.find(l => l.id.startsWith('highway')) ?? layers.find(l => l.type === 'symbol'))?.id;
       m.addLayer({ id: 'u-fill', type: 'fill', source: 'units', paint: {
         'fill-color': ['get', 'color'],
         'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], Math.min(1, opacity + 0.15), ['==', ['get', 'has'], 0], 0.05, opacity],

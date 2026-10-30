@@ -2,11 +2,12 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { motion } from 'motion/react';
 import VerbHead from '../components/VerbHead';
+import NextStep from '../components/NextStep';
 import Rich from '../components/Rich';
 import { circle, column, loadPoints, metres, type Points, type Unit } from '../lib/data';
 import { VAR, fmt } from '../lib/variables';
 import { discoveries, loadScales, toRule, type Rule, type Scales } from '../lib/engine';
-import { quantileColors, SEQ_RAMP } from '../lib/color';
+import { quantileColors, topicRamp } from '../lib/color';
 import { colorOf, type Level } from '../components/Light';
 
 const CityMap = lazy(() => import('../components/CityMap'));
@@ -40,6 +41,7 @@ export default function Measure() {
       <VerbHead verb="מדידה" base="/measure" tab={tab} tabs={TABS}
         line="כל נקודה בעיר מקבלת **פרופיל**: מה יש ברדיוס הליכה, איפה היא עומדת ביחס ל**כל העיר**, ו==איזה כלל תכנון חל עליה==." />
       {tab === 'place' ? <Place /> : <Suspense fallback={<div className="muted">טוען</div>}><Atlas embedded /></Suspense>}
+      <NextStep />
     </div>
   );
 }
@@ -73,7 +75,7 @@ function Place() {
   }, [S, p[0], p[1]]);
   const here = rules.filter(r => r.applies.includes(hex8));
 
-  const colors = useMemo(() => (fine ? quantileColors(column(fine, layer)) : []), [fine, layer]);
+  const colors = useMemo(() => (fine ? quantileColors(column(fine, layer), topicRamp(layer)) : []), [fine, layer]);
   const overlay = useMemo<GeoJSON.FeatureCollection>(() => ({
     type: 'FeatureCollection',
     features: [
@@ -127,7 +129,7 @@ function Place() {
           </div>
           <div className="map-overlay legend" style={{ bottom: 12, insetInlineEnd: 12, maxWidth: 230 }} data-testid="measure-legend">
             <div className="small" style={{ fontWeight: 600 }}>{VAR[layer].name}</div>
-            <div style={{ display: 'flex', direction: 'ltr', margin: '4px 0' }}>{SEQ_RAMP.map(c => <span key={c} style={{ flex: 1, height: 8, background: c }} />)}</div>
+            <div style={{ display: 'flex', direction: 'ltr', margin: '4px 0' }}>{topicRamp(layer).map(c => <span key={c} style={{ flex: 1, height: 8, background: c }} />)}</div>
             <div className="small muted" style={{ display: 'flex', justifyContent: 'space-between', direction: 'ltr' }}><span>נמוך</span><span>גבוה</span></div>
             <div className="mini-legend">{Object.entries(CAT).filter(([k]) => (near?.count[k] ?? 0) > 0).map(([k, c]) => <span key={k}><i style={{ background: c.color, borderRadius: '50%' }} />{c.name}</span>)}</div>
             <div className="hint">קו מקווקו: רדיוס של {R} מ'</div>
@@ -144,7 +146,7 @@ function Place() {
         <div className="two">
           <section className="card pad">
             <div className="eyebrow">איפה המקום עומד מול העיר</div>
-            <p className="small muted">אחוזון: כמה מהמשושים בעיר נמוכים מהמקום הזה. הקו השחור הוא חציון העיר.</p>
+            <Rich as="p" className="small muted">{'הפס מראה כמה מהעיר נמוך מהמקום הזה. הקו השחור באמצע הוא המקום האמצעי בעיר. ירוק: טוב מרוב העיר. אדום: פחות טוב מרוב העיר.'}</Rich>
             {PROFILE.map(k => prof.values[k] != null && (
               <div key={k} style={{ display: 'grid', gridTemplateColumns: '150px minmax(0,1fr) 92px', gap: 10, alignItems: 'center', margin: '9px 0' }}>
                 <span className="small">{VAR[k].name}</span>
@@ -182,7 +184,7 @@ function Place() {
                     </a>
                   ))}
                 </div>
-                <p className="hint">התמונות מאפליקציית רשימת השימור. לחיצה פותחת את תיק התיעוד.</p>
+                <Rich as="p" className="hint">{'התמונות מאפליקציית רשימת השימור. לחיצה פותחת את תיק התיעוד.'}</Rich>
               </>
             )}
             <div className="eyebrow" style={{ marginTop: 18 }}>אפליקציות עירוניות למקום הזה</div>

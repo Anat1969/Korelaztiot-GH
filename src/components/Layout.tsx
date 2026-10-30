@@ -4,14 +4,15 @@ import { editorKey, forgetEditorKey } from '../lib/editor';
 import { toast, Toaster } from './Toast';
 import { asset } from '../lib/data';
 
-// The six verbs of the tool: every page answers one of them.
+// The verbs of the tool, in working order: measure, know, understand, plan, act, use. Learning accompanies all of them.
 export const NAV = [
   { to: '/measure', label: 'מדידה', sub: 'פרופיל מקום' },
   { to: '/know', label: 'ידיעה', sub: 'גילוי קשרים' },
   { to: '/lab', label: 'הבנה', sub: 'מעבדה' },
   { to: '/plan', label: 'תכנון', sub: 'כללים ותאום' },
-  { to: '/learn', label: 'למידה', sub: 'מסלולים ושיטה' },
+  { to: '/act', label: 'פעולה', sub: 'כללי אצבע' },
   { to: '/use', label: 'שימוש', sub: 'ממצאים ונתונים' },
+  { to: '/learn', label: 'למידה', sub: 'מלווה כל שלב' },
 ];
 
 const CHAT = 'https://claude.ai/code/session_018qeN1BUNpW1ECSbW8uPwSK';

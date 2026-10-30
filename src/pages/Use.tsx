@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import VerbHead from '../components/VerbHead';
+import NextStep from '../components/NextStep';
 import { loadMeta, loadUnits, UNIT_TYPES, type Meta, type UnitType } from '../lib/data';
 import { FAMILIES, VARIABLES } from '../lib/variables';
 import { toast } from '../components/Toast';
@@ -22,6 +23,7 @@ export default function Use() {
         {tab === 'data' && <Data />}
         {tab === 'updates' && <Updates embedded />}
       </Suspense>
+      <NextStep />
     </div>
   );
 }
@@ -68,7 +70,7 @@ function Data() {
         <div className="eyebrow">מילון הנתונים: {VARIABLES.length} משתנים</div>
         <SortTable testid="dictionary" rows={VARIABLES} group={v => FAMILIES[v.family].name}
           groupLabel={g => g} cols={[
-            { key: 'name', label: 'משתנה', value: v => v.name, render: v => <b style={{ fontWeight: 600 }}>{v.name}</b> },
+            { key: 'name', label: 'שכבה', value: v => v.name, render: v => <b style={{ fontWeight: 600 }}>{v.name}</b> },
             { key: 'key', label: 'מפתח', value: v => v.key, render: v => <span className="mono" style={{ direction: 'ltr', display: 'inline-block' }}>{v.key}</span> },
             { key: 'unit', label: 'יחידה', value: v => v.unit },
             { key: 'source', label: 'מקור', value: v => v.source },

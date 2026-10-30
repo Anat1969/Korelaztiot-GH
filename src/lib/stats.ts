@@ -306,22 +306,22 @@ export interface ReliabilityPart { key: string; label: string; score: number; no
 export function reliability(res: PairResult, scale?: { r: number; label: string }[]): { score: number; parts: ReliabilityPart[] } {
   const parts: ReliabilityPart[] = [];
   const clamp = (v: number) => Math.max(0.02, Math.min(1, v));
-  parts.push({ key: 'sig', label: 'מובהקות מרחבית', score: clamp(res.pSpatial < 0.01 ? 1 : res.pSpatial < 0.05 ? 0.8 : res.pSpatial < 0.1 ? 0.45 : 0.15),
-    note: `p מתוקן לאוטוקורלציה = ${fmtP(res.pSpatial)} (n אפקטיבי ${res.nEff.toFixed(0)} מתוך ${res.n})` });
-  parts.push({ key: 'n', label: 'גודל מדגם אפקטיבי', score: clamp(res.nEff / 30),
-    note: res.nEff >= 30 ? 'מספיק יחידות בלתי תלויות' : `רק כ-${res.nEff.toFixed(0)} יחידות בלתי תלויות. הרחבה לקנה מידה עדין יותר תחזק` });
+  parts.push({ key: 'sig', label: 'לא מקרי, גם כששכנים דומים', score: clamp(res.pSpatial < 0.01 ? 1 : res.pSpatial < 0.05 ? 0.8 : res.pSpatial < 0.1 ? 0.45 : 0.15),
+    note: `הסיכוי שזה מקרי: **${chance(res.pSpatial)}**.` });
+  parts.push({ key: 'n', label: 'מספיק מקומות שונים', score: clamp(res.nEff / 30),
+    note: res.nEff >= 30 ? `כ-**${res.nEff.toFixed(0)}** מקומות שונים באמת. זה מספיק.` : `רק כ-**${res.nEff.toFixed(0)}** מקומות שונים באמת. יחידות קטנות יותר יחזקו את הבדיקה.` });
   const w = Math.abs(res.ci[1] - res.ci[0]);
-  parts.push({ key: 'ci', label: 'צרות רווח הסמך', score: clamp(1 - w / 1.2), note: `רווח סמך 95%: ${fr(res.ci[0])} עד ${fr(res.ci[1])}` });
+  parts.push({ key: 'ci', label: 'הערכה מדויקת', score: clamp(1 - w / 1.2), note: `העוצמה האמיתית כנראה בין **${fr(res.ci[0])}** ל-**${fr(res.ci[1])}**.` });
   const agree = Math.abs(res.r - res.rho);
-  parts.push({ key: 'mono', label: 'הסכמה בין Pearson ל-Spearman', score: clamp(1 - agree / 0.4),
-    note: agree < 0.1 ? 'הקשר יציב גם בדירוגים, לא נשען על ערכים קיצוניים' : `פער ${fr(agree)}: ייתכן קשר לא ליניארי או ערכים חריגים` });
-  parts.push({ key: 'jack', label: 'יציבות להוצאת יחידה', score: clamp(1 - res.jack.shift / 0.25),
-    note: `הוצאת יחידה אחת מזיזה את r עד ${fr(res.jack.shift)}` });
+  parts.push({ key: 'mono', label: 'שתי שיטות חישוב מסכימות', score: clamp(1 - agree / 0.4),
+    note: agree < 0.1 ? 'גם כשמדרגים במקום למדוד, יוצאת אותה תמונה.' : `השיטות לא מסכימות. כנראה כמה מקומות חריגים מושכים את התוצאה.` });
+  parts.push({ key: 'jack', label: 'לא תלוי במקום אחד', score: clamp(1 - res.jack.shift / 0.25),
+    note: res.jack.shift < 0.1 ? 'גם בלי המקום החריג ביותר, התמונה דומה.' : `מקום אחד מזיז את העוצמה ב-**${fr(res.jack.shift)}**.` });
   if (scale && scale.length > 1) {
     const signs = new Set(scale.map(s => Math.sign(s.r)));
     const spread = Math.max(...scale.map(s => s.r)) - Math.min(...scale.map(s => s.r));
-    parts.push({ key: 'scale', label: 'עקביות בין קני מידה', score: clamp(signs.size > 1 ? 0.15 : 1 - spread / 0.6),
-      note: scale.map(s => `${s.label} ${fr(s.r)}`).join(' · ') + (signs.size > 1 ? ' · הכיוון מתהפך: בעיית יחידת שטח (MAUP)' : '') });
+    parts.push({ key: 'scale', label: 'נכון בכל גודל יחידה', score: clamp(signs.size > 1 ? 0.15 : 1 - spread / 0.6),
+      note: scale.map(s => `${s.label} **${fr(s.r)}**`).join(', ') + (signs.size > 1 ? '. ==הכיוון מתהפך בין הגדלים==.' : '.') });
   }
   const wts: Record<string, number> = { sig: 1.4, n: 0.8, ci: 1, mono: 0.8, jack: 0.9, scale: 1.1 };
   let sw = 0, sl = 0;
@@ -335,6 +335,14 @@ export const iso = (s: string) => `\u2066${s}\u2069`;
 /** A coefficient with its sign, isolated for RTL text. */
 export const fr = (x: number | null | undefined, d = 2, sign = false) =>
   x == null || !isFinite(x) ? 'לא זמין' : iso(`${sign && x >= 0 ? '+' : ''}${x.toFixed(d)}`);
+
+/** A p-value in plain words: the chance that a relation this strong appears by luck. */
+export function chance(p: number | null | undefined): string {
+  if (p == null || !isFinite(p)) return 'לא ידוע';
+  if (p < 0.001) return 'פחות מאחד לאלף';
+  if (p < 0.01) return `כ-${iso(Math.round(p * 1000) + '')} לאלף`;
+  return `${iso(Math.round(p * 100) + '%')}`;
+}
 
 export function fmtP(p: number | null | undefined): string {
   if (p == null || !isFinite(p)) return 'לא זמין';

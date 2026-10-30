@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import Rich from '../components/Rich';
 import { motion } from 'motion/react';
 import { column, loadUnits, UNIT_TYPES, type UnitType } from '../lib/data';
 import { MATRIX_KEYS, VAR, FAMILIES } from '../lib/variables';
 import { runMatrix, type MatrixCell } from '../lib/worker-client';
 import { rColor } from '../lib/color';
-import { fmtP, fr } from '../lib/stats';
+import { fmtP, fr, chance } from '../lib/stats';
 
 export default function Matrix({ embedded = false }: { embedded?: boolean }) {
   const [sp, setSp] = useSearchParams();
@@ -37,10 +38,10 @@ export default function Matrix({ embedded = false }: { embedded?: boolean }) {
     <Wrap className={embedded ? '' : 'page'}>
       {!embedded && <><div className="eyebrow">מטריצת קשרים</div>
       <h2 style={{ margin: '8px 0 12px' }}>כל המשתנים מול כל המשתנים</h2></>}
-      <p className="lead">{MATRIX_KEYS.length} משתנים, {(MATRIX_KEYS.length * (MATRIX_KEYS.length - 1)) / 2} זוגות. כשבודקים כל כך הרבה זוגות, חלק ייראו מובהקים במקרה. לכן כל זוג מתוקן גם לאוטוקורלציה מרחבית וגם לבדיקות מרובות (Benjamini-Hochberg). לחיצה על תא פותחת אותו במעבדה.</p>
+      <Rich as="p" className="lead">{`כל שורה וכל עמודה היא שכבה. כל תא אומר עד כמה שתי השכבות הולכות יחד בעיר. ==אדום: עולות יחד. כחול: אחת עולה והשנייה יורדת==. המספר הוא העוצמה, מ-100 עד 100-. כשבודקים ${(MATRIX_KEYS.length * (MATRIX_KEYS.length - 1)) / 2} זוגות, חלקם ייראו קשורים במקרה, ולכן "רק קשרים בטוחים" מסתיר אותם. לחיצה על תא פותחת אותו במעבדה.`}</Rich>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '18px 0' }}>
         <div className="seg" role="group" aria-label="יחידת ניתוח">{UNIT_TYPES.map(u => <button key={u.key} aria-pressed={unit === u.key} onClick={() => set('u', u.key)}>{u.short}</button>)}</div>
-        <div className="seg" role="group" aria-label="סינון"><button aria-pressed={onlySig} onClick={() => set('s', '1')}>רק מובהקים</button><button aria-pressed={!onlySig} onClick={() => set('s', '0')}>הכול</button></div>
+        <div className="seg" role="group" aria-label="סינון"><button aria-pressed={onlySig} onClick={() => set('s', '1')}>רק קשרים בטוחים</button><button aria-pressed={!onlySig} onClick={() => set('s', '0')}>הכול</button></div>
       </div>
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1fr)', gap: 18 }}>
         <div className="card pad matrix-wrap" data-testid="matrix">
@@ -70,7 +71,7 @@ export default function Matrix({ embedded = false }: { embedded?: boolean }) {
             </table>
           )}
           <div className="small muted" style={{ marginTop: 10, minHeight: 22 }}>
-            {t ? `${VAR[MATRIX_KEYS[tip!.i]].name} מול ${VAR[MATRIX_KEYS[tip!.j]].name}: r = ${fr(t.r)}, n = ${t.n}, n אפקטיבי ${t.nEff.toFixed(0)}, p מרחבי ${fmtP(t.p)}, q אחרי תיקון ${fmtP(t.q)}` : 'המספרים בתאים הם r כפול 100. אדום הוא קשר חיובי, כחול הוא קשר שלילי.'}
+            {t ? <Rich as="span">{`**${VAR[MATRIX_KEYS[tip!.i]].name}** ו**${VAR[MATRIX_KEYS[tip!.j]].name}**: ${t.r > 0 ? 'עולות יחד' : 'אחת עולה והשנייה יורדת'}, עוצמה **${fr(t.r)}**. הסיכוי שזה מקרי: **${chance(t.q)}**.`}</Rich> : 'מעבר עכבר על תא מסביר אותו.'}
           </div>
         </div>
         <div className="card pad">
