@@ -317,3 +317,13 @@ table.sort tr.group td { background: var(--bg-2); font-weight: 600; font-family:
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 .cards > .fade:nth-child(2) { animation-delay: .06s; } .cards > .fade:nth-child(3) { animation-delay: .12s; }
 .cards > .fade:nth-child(4) { animation-delay: .18s; } .cards > .fade:nth-child(5) { animation-delay: .24s; } .cards > .fade:nth-child(6) { animation-delay: .3s; }
+
+/* ---------- shadow where white and black stand out (Anat, 30.10.2026) ---------- */
+.btn:not(.ghost):not(.quiet), .nav a.active, .seg button[aria-pressed="true"], .check[aria-pressed="true"], .tabs .check[aria-pressed="true"] {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .25), 0 6px 14px -4px rgba(15, 20, 24, .45), 0 14px 30px -14px rgba(15, 20, 24, .5);
+}
+.btn.ghost, .seg button, .check, .field, .tag, .legend, .photo-card, .finding-row { box-shadow: var(--shadow-1); }
+.field:focus { box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent), var(--shadow-1); }
+.card { box-shadow: 0 1px 0 rgba(20, 26, 30, .05), 0 10px 26px -10px rgba(20, 26, 30, .22), 0 30px 60px -34px rgba(20, 26, 30, .28); }
+.toast { box-shadow: 0 12px 30px -8px rgba(0, 0, 0, .55); }
+.topbar { box-shadow: 0 1px 0 var(--line), 0 10px 26px -18px rgba(0, 0, 0, .45); }

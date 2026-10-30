@@ -74,7 +74,7 @@ export default function Explorer() {
         ))}
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end', marginTop: 12 }}>
           <div style={{ minWidth: 220 }}>
-            <label className="lbl" htmlFor="tgt">מה אני רוצה להבין (משתנה יעד)</label>
+            <label className="lbl" htmlFor="tgt">מה אני רוצה להבין</label>
             <select id="tgt" className="field" value={target} onChange={e => set({ t: e.target.value })}>{sel.map(k => <option key={k} value={k}>{VAR[k].name}</option>)}</select>
           </div>
           <div className="seg" role="group" aria-label="יחידת ניתוח">{UNIT_TYPES.map(u => <button key={u.key} aria-pressed={scale === u.key} onClick={() => set({ u: u.key })}>{u.short}</button>)}</div>
@@ -92,13 +92,13 @@ export default function Explorer() {
 
           <div className="two">
             <section className="card pad">
-              <div className="eyebrow">רשת תלויות</div>
-              <p className="small muted">קו הוא קשר שנשאר כשכל השכבות האחרות קבועות (מתאם חלקי). אדום חיובי, כחול שלילי.</p>
+              <div className="eyebrow">מי קשור למי</div>
+              <Rich as="p" className="hint">{'כל קו מחבר שתי שכבות שקשורות גם כשכל השאר זהה. קו אדום: עולות יחד. קו כחול: אחת עולה והשנייה יורדת. קו עבה: קשר חזק.'}</Rich>
               <Network sel={sel} P={out.P} edges={out.edges} />
             </section>
             <section className="card pad">
-              <div className="eyebrow">מה מסביר את {T.name}</div>
-              <p className="small muted">מקדם מתוקנן: כמה סטיות תקן זז היעד כשהשכבה זזה בסטיית תקן אחת, והשאר קבועות.</p>
+              <div className="eyebrow">מה משפיע על {T.name}</div>
+              <Rich as="p" className="hint">{`ככל שהפס ארוך יותר, השכבה מסבירה יותר את ${T.name}. פס ימינה באדום: יותר ממנה, יותר ${T.short}. פס שמאלה בכחול: יותר ממנה, פחות ${T.short}. פס חיוור: אולי מקרי.`}</Rich>
               {drivers.map(d => (
                 <div key={d.k} style={{ display: 'grid', gridTemplateColumns: '120px minmax(0,1fr) 80px', gap: 8, alignItems: 'center', margin: '8px 0' }}>
                   <span className="small">{VAR[d.k].name}</span>
@@ -106,7 +106,7 @@ export default function Explorer() {
                     <i style={{ insetInlineStart: d.b >= 0 ? '50%' : `${50 + Math.max(-50, d.b * 50)}%`, width: `${Math.min(50, Math.abs(d.b) * 50)}%`, background: d.b >= 0 ? 'var(--heat)' : 'var(--sea)', opacity: d.p < 0.05 ? 1 : 0.35 }} />
                     <b style={{ insetInlineStart: '50%' }} />
                   </div>
-                  <span className="small"><b className="num">{fr(d.b, 2, true)}</b> {d.p < 0.05 ? '' : 'לא מובהק'}</span>
+                  <span className="small"><b className="num">{fr(d.b, 2, true)}</b> {d.p < 0.05 ? '' : 'אולי מקרי'}</span>
                 </div>
               ))}
               {drivers.some(d => d.vif > 5) && <p className="small" style={{ color: 'var(--problem)' }}>שכבות עם VIF מעל 5 חופפות זו לזו. המקדמים שלהן לא יציבים.</p>}
@@ -114,8 +114,8 @@ export default function Explorer() {
           </div>
 
           <section className="card pad">
-            <div className="eyebrow">טיפולוגיות: {out.km.centers.length} סוגי אזורים</div>
-            <p className="small muted">חלוקה אוטומטית (k-means) של היחידות לפי השכבות שבחרת. כל צבע הוא סוג של מקום.</p>
+            <div className="eyebrow">{out.km.centers.length} סוגי אזורים בעיר</div>
+            <Rich as="p" className="hint">{'המכונה מחלקת את העיר לסוגים של מקומות לפי השכבות שבחרת. כל צבע הוא סוג אחד, והשם שלו אומר במה הוא בולט.'}</Rich>
             <div className="two">
               <div>
                 <div className="mini" style={{ border: '1px solid var(--line)', background: 'var(--bg-2)' }}><MiniMap units={units!} colors={out.clusterColor} title="מפת טיפולוגיות" /></div>
@@ -130,23 +130,23 @@ export default function Explorer() {
                   ...sel.map((k, t) => ({ key: k, label: VAR[k].short, num: true, value: (r: { c: number[] }) => r.c[t],
                     render: (r: { c: number[] }) => <span className="num" style={{ display: 'block', textAlign: 'center', padding: 2, background: r.c[t] > 0 ? `rgba(200,56,44,${Math.min(0.6, Math.abs(r.c[t]) / 2.5)})` : `rgba(43,111,158,${Math.min(0.6, Math.abs(r.c[t]) / 2.5)})` }}>{fr(r.c[t], 1, true)}</span> })),
                 ]} />
-              <p className="hint">ערך בתא: כמה סטיות תקן הסוג רחוק מממוצע העיר. אדום מעל, כחול מתחת.</p>
+              <Rich as="p" className="hint">{'המספר בתא: כמה הסוג רחוק מממוצע העיר. אדום מעל, כחול מתחת.'}</Rich>
               </div>
             </div>
           </section>
 
           <div className="two">
             <section className="card pad">
-              <div className="eyebrow">ספים</div>
+              <div className="eyebrow">נקודות מפנה</div>
               {out.th.length ? out.th.map(t => (
                 <div key={t.o} className="tone tone-solution" style={{ margin: '8px 0', padding: '10px 12px' }}>
-                  <Rich as="p">{`כש${VAR[t.o].name} עובר **${fmt(t.bp!.k, t.o)}** ${VAR[t.o].unit}, השיפוע של ${T.name} משתנה מ-**${fr(t.bp!.below, 3)}** ל-**${fr(t.bp!.above, 3)}**.`}</Rich>
+                  <Rich as="p">{`עד **${fmt(t.bp!.k, t.o)} ${VAR[t.o].unit}** של ${VAR[t.o].name}, ${T.short} ${t.bp!.below > 0 ? 'עולה' : 'יורד'} איתו. מעל זה, ${T.short} ${t.bp!.above > 0 ? 'עולה' : 'יורד'}.`}</Rich>
                 </div>
-              )) : <p className="small muted">לא נמצא סף מובהק בין {T.name} לשכבות האחרות.</p>}
+              )) : <p className="small muted">לא נמצאה נקודה שבה הקשר עם {T.name} משנה כיוון.</p>}
             </section>
             <section className="card pad">
-              <div className="eyebrow">חריגים: איפה המודל טועה</div>
-              <p className="small muted">יחידות ש{T.name} בהן רחוק מהצפוי לפי השכבות האחרות. שם מחפשים את מה שהנתונים לא רואים.</p>
+              <div className="eyebrow">מקומות שבורחים מהכלל</div>
+              <Rich as="p" className="hint">{`במקומות האלה ${T.name} רחוק ממה שהשכבות האחרות צופות. ==שם כדאי לחפש בשטח את מה שהנתונים לא רואים==.`}</Rich>
               {[...out.resid.slice(0, 3), ...out.resid.slice(-3).reverse()].map((r, k) => (
                 <div key={r.ui} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 0', borderTop: '1px dashed var(--line)' }}>
                   <span>{units![r.ui].name}</span>

@@ -63,3 +63,48 @@ export function rColor(r: number, alpha = 1): string {
   const l = 96 - a * 52;
   return `hsl(${h} ${s}% ${l}% / ${alpha})`;
 }
+
+// ---------- topic colours: each subject keeps its own hue, shown as a monochrome scale ----------
+export const TOPIC: Record<string, { hue: string; name: string }> = {
+  heat: { hue: '#b8382a', name: 'חום' }, green: { hue: '#2f7d4a', name: 'צמחייה' }, built: { hue: '#7a5236', name: 'בינוי' },
+  move: { hue: '#4a4f96', name: 'תנועה' }, service: { hue: '#a0662a', name: 'שירותים' }, edu: { hue: '#2f6fa8', name: 'חינוך' },
+  plan: { hue: '#7a4f86', name: 'תכנון' }, water: { hue: '#2b6f9e', name: 'ים ומים' },
+};
+const TOPIC_OF: Record<string, string> = {
+  lst: 'heat', lst_p90: 'heat', ndvi: 'green', green_cover: 'green', park_share: 'green', green_access: 'green',
+  ndbi: 'built', bld_density: 'built', bld_coverage: 'built', bld_footprint: 'built',
+  road_density: 'move', walk_density: 'move', intersections: 'move', bus_access: 'move', bus_density: 'move',
+  poi_density: 'service', food_density: 'service', retail_density: 'service', health_density: 'service',
+  kinder_density: 'edu', kinder_access: 'edu', school_density: 'edu', early_density: 'edu',
+  renewal_projects: 'plan', renewal_units: 'plan', plan_density: 'plan', shimur_count: 'plan',
+  dist_water: 'water', area: 'built',
+};
+export const topicOf = (key: string) => TOPIC[TOPIC_OF[key] ?? 'built'];
+
+const hex = (h: string) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const toHex = (c: number[]) => '#' + c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+const mix = (a: string, b: string, t: number) => { const A = hex(a), B = hex(b); return toHex(A.map((v, i) => v + (B[i] - v) * t)); };
+const PAPER = '#f2f0eb';
+
+/** Seven-step monochrome scale of a topic: architectural paper to the topic hue, then a little deeper. */
+export function topicRamp(key: string): string[] {
+  const h = topicOf(key).hue;
+  return [0.06, 0.2, 0.36, 0.52, 0.68, 0.84, 1].map((t, i) => (i === 6 ? mix(h, '#000000', 0.2) : mix(PAPER, h, t)));
+}
+
+/** Bivariate 3x3 palette of two topics: x hue grows to the right, y hue grows upward, both together blend. */
+export function bivarPalette(xKey: string, yKey: string): string[][] {
+  const hx = hex(topicOf(xKey).hue), hy = hex(topicOf(yKey).hue), p = hex(PAPER);
+  return [0, 1, 2].map(r => [0, 1, 2].map(c => {
+    const tx = c / 2 * 0.85, ty = r / 2 * 0.85;
+    // multiply blend of two tints, so "both high" reads as the dark mixture of the two subjects
+    const ax = p.map((v, i) => v + (hx[i] - v) * tx), ay = p.map((v, i) => v + (hy[i] - v) * ty);
+    return toHex(ax.map((v, i) => (v * ay[i]) / 255));
+  }));
+}
+
+export function bivariateTopic(xKey: string, yKey: string, xs: (number | null)[], ys: (number | null)[]): (string | null)[] {
+  const P = bivarPalette(xKey, yKey), tx = terciles(xs), ty = terciles(ys);
+  const c3 = (v: number, [a, b]: [number, number]) => (v <= a ? 0 : v <= b ? 1 : 2);
+  return xs.map((x, i) => (x == null || ys[i] == null ? null : P[c3(ys[i]!, ty)][c3(x, tx)]));
+}

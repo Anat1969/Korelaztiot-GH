@@ -13,6 +13,7 @@ const Know = lazy(() => import('./pages/Know'));
 const Plan = lazy(() => import('./pages/Plan'));
 const Learn = lazy(() => import('./pages/Learn'));
 const Use = lazy(() => import('./pages/Use'));
+const Act = lazy(() => import('./pages/Act'));
 
 /** Old addresses (version 2.0) keep working: they open the same tool inside its verb. */
 function Moved({ to }: { to: string }) {
@@ -40,6 +41,7 @@ const router = (isRoot ? createBrowserRouter : createHashRouter)([
       { path: '/lab', element: page(<Lab />) },
       { path: '/plan', element: page(<Plan />) },
       { path: '/learn', element: page(<Learn />) },
+      { path: '/act', element: page(<Act />) },
       { path: '/use', element: page(<Use />) },
       { path: '/matrix', element: <Moved to="/know?tab=matrix" /> },
       { path: '/atlas', element: <Moved to="/measure?tab=atlas" /> },

@@ -8,6 +8,8 @@ import Rich from '../components/Rich';
 
 // The release notes that ship with the code. Entries added from the editor menu are stored in Supabase (kr_updates).
 const BUILT_IN: Update[] = [
+  { id: 'v3.2', version: '3.2', kind: 'feature', published_at: '2026-10-30T12:00:00Z', title: 'כללי אצבע, סיפור במקום קודים, צבע לפי נושא',
+    body: '==דף חדש: כללי אצבע==, הנחיות פעולה שנולדות מהנתונים ומתעדכנות בכל חודש. כל ממצא מסופר כשאלה ותשובה במילים פשוטות. כל משפט בשורה חדשה. כל גרף עם הסבר איך לקרוא. **צבע לפי נושא**: חום אדום, צמחייה ירוק, תנועה אינדיגו. המפה של אשדוד נראית מעל המשושים. סדר עבודה קבוע בין הדפים, וצעד הבא בסוף כל דף.' },
   { id: 'v3.1', version: '3.1', kind: 'feature', published_at: '2026-10-29T21:00:00Z', title: 'קריאה במבט: תובנה, הסבר, מספר',
     body: '==כל ממצא נקרא בשלוש שניות==: **שורת תובנה**, משפט הסבר ומספרים בולטים. **רמזור** לאמינות ולמובהקות, **מקרא** לכל מפה, **טבלאות ממוינות**, תמונות של מבני שימור, וקישורים לאפליקציות העירוניות הקשורות.' },
   { id: 'v3.0', version: '3.0', kind: 'feature', published_at: '2026-10-29T20:00:00Z', title: 'כלי אחד לשש פעולות: מדידה, ידיעה, הבנה, תכנון, למידה, שימוש',
@@ -40,7 +42,7 @@ export default function Updates({ embedded = false }: { embedded?: boolean }) {
     <div className={embedded ? '' : 'page'}>
       <div className="eyebrow">מה חדש</div>
       <h2 style={{ margin: '8px 0 12px' }}>עדכונים, נתונים וגרסאות</h2>
-      <p className="lead">הנתונים מתעדכנים אוטומטית בתחילת כל חודש: הגרסה החדשה של Overture, והצילומים הבהירים האחרונים של Sentinel-2 ו-Landsat. כשיש גרסה חדשה של האפליקציה, תופיע הודעה ולחיצה אחת תטען אותה.</p>
+      <Rich as="p" className="lead">{'הנתונים מתעדכנים אוטומטית בתחילת כל חודש: הגרסה החדשה של Overture, והצילומים הבהירים האחרונים של Sentinel-2 ו-Landsat. כשיש גרסה חדשה של האפליקציה, תופיע הודעה ולחיצה אחת תטען אותה.'}</Rich>
 
       <div className="cards" style={{ ['--rows' as string]: 3, ['--min' as string]: '210px', marginBottom: 16 }}>
         <div className="card flat source"><div className="mono small muted">הנתונים נבנו</div><div className="big">{meta ? new Date(meta.generated).toLocaleDateString('he-IL') : '...'}</div><div className="small muted">עדכון אוטומטי ב-2 לכל חודש</div></div>

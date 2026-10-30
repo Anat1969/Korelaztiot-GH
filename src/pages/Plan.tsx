@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { motion } from 'motion/react';
 import VerbHead from '../components/VerbHead';
+import NextStep from '../components/NextStep';
 import Rich from '../components/Rich';
 import MiniMap from '../components/MiniMap';
 import { toast } from '../components/Toast';
@@ -10,8 +11,8 @@ import { MATRIX_KEYS, VAR, fmt } from '../lib/variables';
 import { KIND_NAME } from '../lib/config';
 import { discoveries, loadScales, toRule, type Rule, type Scales } from '../lib/engine';
 import { multiRegression } from '../lib/discover';
-import { quantileColors, SEQ_RAMP } from '../lib/color';
-import { fr } from '../lib/stats';
+import { quantileColors, topicOf, topicRamp } from '../lib/color';
+import { fr, chance } from '../lib/stats';
 import Light, { levelOfScore } from '../components/Light';
 
 const CityMap = lazy(() => import('../components/CityMap'));
@@ -25,6 +26,7 @@ export default function Plan() {
       <VerbHead verb="תכנון" base="/plan" tab={tab} tabs={TABS}
         line="כל תגלית הופכת ל**כלל מועמד**: תנאי, תוצאה, איפה הוא חל, וכמה אפשר לסמוך עליו. ==כלל נבחן בשטח לפני שהוא נכנס לתוכנית==." />
       {tab === 'rules' ? <Rules /> : <Twin />}
+      <NextStep />
     </div>
   );
 }
@@ -63,7 +65,7 @@ function Rules() {
   return (
     <div className="grid" style={{ gap: 16 }} data-testid="rules">
       {rules.map((r, i) => {
-        const colors = units.map((_, k) => (r.applies.includes(k) ? '#c8382c' : '#d9dcde'));
+        const colors = units.map((_, k) => (r.applies.includes(k) ? topicOf(r.y).hue : '#dedcd6'));
         return (
           <motion.article key={r.id} className="card pad" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 6) * 0.05 }}
             style={isFocus(r.x, r.y) ? { outline: '2px solid var(--ink)' } : undefined}>
@@ -86,10 +88,10 @@ function Rules() {
               <div>
                 <div className="lbl">איפה הכלל חשוב ({r.applies.length} יחידות)</div>
                 <div className="mini" style={{ border: '1px solid var(--line)', background: 'var(--bg-2)', maxWidth: 360 }}><MiniMap units={units} colors={colors} title="יחידות שבהן הכלל חשוב" /></div>
-                <div className="mini-legend"><span><i style={{ background: '#c8382c' }} />הכלל חשוב כאן</span><span><i style={{ background: '#d9dcde' }} />שאר העיר</span></div>
+                <div className="mini-legend"><span><i style={{ background: topicOf(r.y).hue }} />הכלל חשוב כאן</span><span><i style={{ background: '#dedcd6' }} />שאר העיר</span></div>
                 <div style={{ marginTop: 10 }}>
                   <div className="meter" style={{ height: 6 }}><i style={{ width: `${r.reliability}%`, background: `var(--tl-${levelOfScore(r.reliability)})` }} /></div>
-                  <Rich as="p" className="small muted">{`מובהקות מתוקנת **${fr(r.d.q, 3)}** · יחידות בלתי תלויות **${Math.round(r.d.nEff)}** · ${r.d.consistent ? 'עקבי בשלושת קני המידה' : 'לא עקבי בקני המידה'}`}</Rich>
+                  <Rich as="p" className="small muted">{`הסיכוי שזה מקרי: **${chance(r.d.q)}** · מקומות שונים באמת: **${Math.round(r.d.nEff)}** · ${r.d.consistent ? 'עקבי בשלושת קני המידה' : 'לא עקבי בקני המידה'}`}</Rich>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                   <Link className="btn small" to={`/plan?tab=twin&y=${r.y}&d=${[r.x, ...(r.control ? [r.control] : [])].join(',')}`}>בדיקה בתאום</Link>
@@ -147,23 +149,23 @@ function Twin() {
     return hit ? base + effect : base;
   }) ?? [], [units, effect, citywide, sel, worst, y]);
   // classes are fixed by today's values, so the scenario visibly moves units between classes
-  const colors = useMemo(() => quantileColors(scenario, SEQ_RAMP, units ? column(units, y) : []), [scenario, units, y]);
+  const colors = useMemo(() => quantileColors(scenario, topicRamp(y), units ? column(units, y) : []), [scenario, units, y]);
 
   if (!units || !model) return <div className="card pad muted">בונה את המודל</div>;
   const u = sel != null ? units[sel] : null;
 
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <div className="tone tone-problem"><h4>חשוב לדעת</h4><Rich as="p">{`זה **מודל סטטיסטי** על **${model.idx.length}** יחידות, לא סימולציה פיזיקלית. הוא אומר מה קורה בדרך כלל באשדוד במקומות שבהם השכבות שונות.`}</Rich></div>
+      <div className="tone tone-problem"><h4>חשוב לדעת</h4><Rich as="p">{`התאום לומד מ-**${model.idx.length}** מקומות באשדוד מה קורה בדרך כלל כשהשכבות שונות. הוא לא סימולציה של פיזיקה. ==הוא אומר מה סביר, לא מה בטוח==.`}</Rich></div>
       <div className="card pad">
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
           <div style={{ minWidth: 220 }}>
-            <label className="lbl" htmlFor="twy">מה משפרים</label>
+            <label className="lbl" htmlFor="twy">מה רוצים לשפר</label>
             <select id="twy" className="field" value={y} onChange={e => set({ y: e.target.value })}>{MATRIX_KEYS.map(k => <option key={k} value={k}>{VAR[k].name}</option>)}</select>
           </div>
           <div className="seg" role="group" aria-label="קנה מידה">{UNIT_TYPES.map(t => <button key={t.key} aria-pressed={scale === t.key} onClick={() => set({ u: t.key })}>{t.short}</button>)}</div>
           <div style={{ flex: 1, minWidth: 260 }}>
-            <div className="lbl">מנופים במודל</div>
+            <div className="lbl">מה אפשר לשנות (עד 5)</div>
             <div className="pill-list">{MATRIX_KEYS.filter(k => k !== y).map(k => (
               <button key={k} className="check" aria-pressed={drivers.includes(k)} onClick={() => {
                 const next = drivers.includes(k) ? drivers.filter(x => x !== k) : [...drivers, k].slice(-5);
@@ -172,7 +174,7 @@ function Twin() {
             ))}</div>
           </div>
         </div>
-        <Rich as="p" className="small muted">{`R² **${Math.round(model.fit.r2 * 100)}%** · ${drivers.map((k, j) => `${VAR[k].short} **${fr(model.fit.beta[j], 3, true)}**`).join(' · ')} (${Y.unit} לכל יחידה)`}</Rich>
+        <Rich as="p" className="small muted">{`השכבות שבחרת מסבירות **${Math.round(model.fit.r2 * 100)}%** מההבדלים ב${Y.name} בין המקומות. ` + drivers.map((k, j) => `כל ${VAR[k].unit === '%' ? 'אחוז' : 'יחידה'} של ${VAR[k].short}: **${fr(model.fit.beta[j], 2, true)} ${Y.unit}**.`).join(' ')}</Rich>
       </div>
 
       <div className="two">
@@ -182,7 +184,7 @@ function Twin() {
           </Suspense>
           <div className="map-overlay legend" style={{ bottom: 12, insetInlineEnd: 12 }}>
             <div className="small">{Y.name} {citywide || sel != null ? 'בתרחיש' : 'היום'}</div>
-            <div style={{ display: 'flex', direction: 'ltr', marginTop: 4 }}>{SEQ_RAMP.map(c => <span key={c} style={{ width: 18, height: 8, background: c }} />)}</div>
+            <div style={{ display: 'flex', direction: 'ltr', marginTop: 4 }}>{topicRamp(y).map(c => <span key={c} style={{ width: 18, height: 8, background: c }} />)}</div>
           </div>
         </section>
         <section className="card pad">

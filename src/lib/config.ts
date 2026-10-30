@@ -21,13 +21,16 @@ export const KNOWN = ['lst|ndvi', 'green_cover|lst', 'lst|ndbi', 'dist_water|lst
 
 export const FAMILY_OF = Object.fromEntries(MATRIX_KEYS.map(k => [k, VAR[k].family]));
 
-export const KIND_NAME = { hidden: 'קשר נסתר', threshold: 'סף', nonlinear: 'לא ליניארי', linear: 'שורד ניטרול' } as const;
+export const KIND_NAME = { hidden: 'קשר נסתר', threshold: 'נקודת מפנה', nonlinear: 'קשר עקום', linear: 'נשאר באזורים דומים' } as const;
 export const KIND_ABOUT = {
-  hidden: 'כמעט אין קשר גולמי. הוא מתגלה רק כשמנטרלים משתנה שלישי.',
-  threshold: 'הכיוון מתהפך מעבר לערך מסוים. זה הסף לתכנון.',
-  nonlinear: 'קשר עקום: מתאם רגיל מחמיץ אותו, מתאם מרחק תופס אותו.',
-  linear: 'הקשר נשאר גם כשמשווים אזורים בעוצמה עירונית דומה.',
+  hidden: 'במבט ראשון אין קשר. כשמשווים רק אזורים דומים, הוא מופיע.',
+  threshold: 'עד ערך מסוים הדברים הולכים בכיוון אחד, ומעליו בכיוון ההפוך. הערך הזה הוא נקודת המפנה לתכנון.',
+  nonlinear: 'הקשר קיים, אבל הוא לא קו ישר. לכן חישוב רגיל מחמיץ אותו.',
+  linear: 'גם כשמשווים אזורים עירוניים באותה מידה, הקשר נשאר. הוא לא רק "עוד עיר".',
 } as const;
 
 /** Reading order of a pair: geography and plans drive, built form and movement mediate, environment and services follow. */
 export const DRIVER_ORDER = ['geo', 'plan', 'built', 'move', 'env', 'edu', 'service'];
+
+/** Quarters where almost nobody lives: port, industry, agriculture, cemetery, parks. Rules of thumb do not point there. */
+export const NON_RESIDENTIAL = ['rova-40', 'rova-24', 'rova-33', 'rova-47', 'rova-64'];

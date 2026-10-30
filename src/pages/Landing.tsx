@@ -36,9 +36,10 @@ export default function Landing() {
 
   const verbNum: Record<string, string> = {
     '/measure': `${meta?.counts.bus_stops ?? 508} תחנות · ${meta?.counts.kinder ?? 578} גנים`,
-    '/know': `${found.length || '...'} תגליות ששרדו ניטרול`,
+    '/know': `${found.length || '...'} תגליות שנשארו באזורים דומים`,
     '/lab': '6 בדיקות אמינות לכל קשר',
     '/plan': `${Math.min(14, found.length) || '...'} כללים מועמדים`,
+    '/act': 'הנחיות קצרות, מתעדכנות כל חודש',
     '/learn': '4 מסלולים, יומן אישי',
     '/use': 'CSV, GeoJSON, ספרייה משותפת',
   };
@@ -47,6 +48,7 @@ export default function Landing() {
     '/know': 'המכונה מחפשת קשרים שלא היינו מחפשים.',
     '/lab': 'קשר אחד לעומק: מפה, תרשים, אמינות.',
     '/plan': 'מתגלית לכלל, ומכלל לתרחיש בתאום העירוני.',
+    '/act': 'כללי אצבע: מה עושים מחר בבוקר, ואיפה מתחילים.',
     '/learn': 'שאלות על אשדוד, צעד אחרי צעד.',
     '/use': 'ממצאים שאומצו, ונתונים פתוחים לכל תוכנה.',
   };
@@ -87,10 +89,12 @@ export default function Landing() {
       </section>
 
       <section className="band" style={{ paddingTop: 30 }} id="verbs">
-        <div className="eyebrow">שש פעולות, כלי אחד</div>
-        <h2 style={{ margin: '10px 0 22px' }}>למדוד, לדעת, להבין, לתכנן, ללמוד, להשתמש</h2>
+        <div className="eyebrow">הסדר של העבודה</div>
+        <h2 style={{ margin: '10px 0 10px' }}>למדוד, לדעת, להבין, לתכנן, לפעול, להשתמש</h2>
+        <Rich as="p" className="lead" >{'הכלי בנוי בסדר של עבודה אמיתית. ==מתחילים ממקום אחד, מגיעים לכלל שאפשר לפעול לפיו==. הלמידה מלווה את כל השלבים.'}</Rich>
+        <div style={{ height: 18 }} />
         <div className="cards" style={{ ['--rows' as string]: 4, ['--min' as string]: '340px' }} data-testid="verbs">
-          {NAV.map((n, i) => (
+          {NAV.filter(n => n.to !== '/learn').map((n, i) => (
             <Link key={n.to} to={n.to} className="card pad fade" style={{ textDecoration: 'none', position: 'relative' }}>
               <div style={{ fontSize: 34, fontWeight: 200, lineHeight: 1.1 }}>{n.label}<span className="mono muted" style={{ position: 'absolute', insetInlineEnd: 16, top: 12, fontSize: 40, opacity: 0.25 }}>0{i + 1}</span></div>
               <div className="muted small">{n.sub}</div>
@@ -99,6 +103,11 @@ export default function Landing() {
             </Link>
           ))}
         </div>
+        <Link to="/learn" className="card pad" style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) auto', gap: 18, alignItems: 'center', textDecoration: 'none' }}>
+          <span style={{ fontSize: 34, fontWeight: 200 }}>למידה</span>
+          <Rich as="span">{'מלווה כל שלב: **4 מסלולים** עם שאלות על אשדוד, ויומן אישי של מה למדת.'}</Rich>
+          <span className="btn ghost small">למסלולים</span>
+        </Link>
       </section>
 
       <section className="band" style={{ paddingTop: 30 }}>

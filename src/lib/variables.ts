@@ -33,9 +33,9 @@ const MUNI = 'עיריית אשדוד, ASHDODMAP';
 export const VARIABLES: Variable[] = [
   { key: 'lst', name: 'טמפרטורת פני שטח', short: 'חום', unit: '°C', family: 'env', source: LS, about: 'ממוצע טמפרטורת פני השטח ביום קיץ בהיר, ביבשה בלבד. מדד מקובל לאי חום עירוני.', good: 'down', digits: 1 },
   { key: 'lst_p90', name: 'מוקדי חום (אחוזון 90)', short: 'מוקדי חום', unit: '°C', family: 'env', source: LS, about: 'הטמפרטורה שרק עשירית מפני השטח ביחידה חמים ממנה. מבליט מוקדים.', good: 'down', digits: 1 },
-  { key: 'ndvi', name: 'צמחייה (NDVI)', short: 'NDVI', unit: 'מדד', family: 'env', source: S2, about: 'מדד צמחייה מנורמל. ערך גבוה הוא צמחייה חיה וצפופה. מחושב על יבשה בלבד.', good: 'up', digits: 3 },
+  { key: 'ndvi', name: 'צמחייה (NDVI)', short: 'צמחייה', unit: 'מדד', family: 'env', source: S2, about: 'מדד צמחייה מנורמל. ערך גבוה הוא צמחייה חיה וצפופה. מחושב על יבשה בלבד.', good: 'up', digits: 3 },
   { key: 'green_cover', name: 'כיסוי ירוק', short: 'כיסוי ירוק', unit: '%', family: 'env', source: S2, about: 'שיעור הפיקסלים ביחידה שבהם NDVI גדול מ-0.3.', good: 'up', digits: 1 },
-  { key: 'ndbi', name: 'אטימות ובינוי (NDBI)', short: 'NDBI', unit: 'מדד', family: 'env', source: S2, about: 'מדד בינוי מנורמל מערוצי SWIR ו-NIR. גבוה הוא משטח בנוי או אטום.', good: 'down', digits: 3 },
+  { key: 'ndbi', name: 'אטימות ובינוי (NDBI)', short: 'אטימות', unit: 'מדד', family: 'env', source: S2, about: 'מדד בינוי מנורמל מערוצי SWIR ו-NIR. גבוה הוא משטח בנוי או אטום.', good: 'down', digits: 3 },
   { key: 'green_access', name: 'גן ציבורי בהישג יד', short: 'גן קרוב', unit: '%', family: 'env', source: 'Overture Maps, שימושי קרקע', about: 'שיעור המבנים שיש להם גן או פארק של חצי דונם ומעלה עד 300 מ\'. היעד של ארגון הבריאות העולמי (WHO, 2016).', good: 'up', digits: 0 },
   { key: 'park_share', name: 'שטח גנים ופארקים', short: 'פארקים', unit: '%', family: 'env', source: OV, about: 'שיעור שטח היחידה שמסווג כגן, פארק, מגרש משחקים או שטח פתוח.', good: 'up', digits: 1 },
   { key: 'bld_density', name: 'צפיפות מבנים', short: 'מבנים לקמ"ר', unit: 'לקמ"ר', family: 'built', source: OV, about: 'מספר טביעות מבנים לקילומטר רבוע.', digits: 0 },

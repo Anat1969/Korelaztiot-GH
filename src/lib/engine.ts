@@ -76,7 +76,7 @@ export function toRule(d: Discovery, units: Unit[], scale: UnitType): Rule {
   const step = STEP[d.x] ?? 1;
   const slope = fit ? fit.beta[0] : 0;
   const delta = slope * step;
-  const ctrlName = ctrlKey === 'urbanity' ? 'עוצמה עירונית' : VAR[ctrlKey].name;
+  const ctrlName = ctrlKey === 'urbanity' ? 'בינוי, כבישים ועסקים' : VAR[ctrlKey].name;
   const up = delta > 0;
   let insight = '', condition = '', effect = '';
   if (d.kind === 'threshold' && d.bp) {
@@ -89,12 +89,12 @@ export function toRule(d: Discovery, units: Unit[], scale: UnitType): Rule {
     effect = `**${Y.name}** ${up ? 'עולה' : 'יורד'} בכ-**${fmt(Math.abs(delta), d.y)} ${Y.unit}**`;
   }
   const explain = d.kind === 'hidden'
-    ? `מתאם גולמי **${fr(d.r)}**, כמעט כלום. בניטרול **${ctrlName}**: ==מתאם ${fr(d.hidden!.partialR)}==.`
+    ? `במבט ראשון אין קשר (עוצמה **${fr(d.r)}**). כשמשווים רק מקומות דומים ב**${ctrlName}**, הוא מופיע: ==עוצמה ${fr(d.hidden!.partialR)}==.`
     : d.kind === 'threshold'
-      ? `בנקודה **${fmt(d.bp!.k, d.x)} ${X.unit}** הכיוון מתהפך: ==${Math.round(d.bp!.gain * 100)}% הסבר נוסף==.`
+      ? `עד **${fmt(d.bp!.k, d.x)} ${X.unit}** הדברים הולכים בכיוון אחד, ומעל זה בכיוון ההפוך. ==זו נקודת המפנה==.`
       : d.kind === 'nonlinear'
-        ? `מתאם מרחק **${fr(d.dcor)}** מול מתאם רגיל **${fr(d.r)}**: ==הקשר עקום, לא קו==.`
-        : `מתאם גולמי **${fr(d.r)}**. אחרי ניטרול **עוצמה עירונית**: ==מתאם ${fr(d.beyond)}==.`;
+        ? `הקשר חזק יותר ממה שחישוב רגיל מראה (**${fr(d.dcor)}** מול **${fr(d.r)}**). ==הוא עקום, לא קו ישר==.`
+        : `הם הולכים יחד (עוצמה **${fr(d.r)}**). גם כשמשווים רק אזורים דומים בבינוי, בכבישים ובעסקים, ==הקשר נשאר: ${fr(d.beyond)}==.`;
   // where the rule matters: units on the "bad" side of Y, or the top quarter of X when Y has no direction
   const yv = ys.map((v, i) => [v, i] as const).filter(([v]) => v != null) as [number, number][];
   const sorted = [...yv].sort((a, b) => a[0] - b[0]);

@@ -28,6 +28,8 @@ jobs:
         with: { node-version: '22' }
       - name: Check the app still builds and the statistics still match SciPy
         run: npm install --no-audit --no-fund --legacy-peer-deps && npm test && npm run build
+      - name: Add this month's rules of thumb to the history
+        run: npx tsx scripts/snapshot_thumbs.ts
       - name: Commit
         run: |
           git config user.name "korelaztiot-data-bot"

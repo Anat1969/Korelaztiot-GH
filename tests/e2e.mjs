@@ -62,7 +62,7 @@ await page.waitForSelector('ai-menu .logo', { timeout: 15000 }).catch(() => {});
 ok(await page.locator('ai-menu .logo').isVisible().catch(() => false), 'A&I logo button in the top bar');
 ok(await page.locator('ai-menu').getAttribute('brand') === 'ashdod', 'municipal brand on the logo button');
 ok(!(await page.locator('header >> text=העתקת קישור').first().isVisible().catch(() => false)), 'no loose development buttons in the bar');
-ok(await page.locator('.nav a').count() === 6, 'six verbs in the navigation');
+ok(await page.locator('.nav a').count() === 7, 'seven steps in the navigation, in working order');
 ok(await page.locator('img[alt*="עיריית אשדוד"]').first().isVisible(), 'municipal logo on the landing page');
 await page.waitForSelector('.finding-row', { timeout: 30000 }).catch(() => {});
 ok(await page.locator('.finding-row').count() >= 3, 'live discoveries on the landing page');
@@ -117,7 +117,7 @@ await page.click('[data-testid="discoveries-table"] th >> text=מתאם גולמ
 const firstAfter = await page.locator('[data-testid="discoveries-table"] tbody tr:not(.group)').first().innerText();
 ok(firstBefore !== firstAfter || await page.locator('[data-testid="discoveries-table"] th[aria-sort="descending"]').count() === 1, 'discoveries table sorts by column');
 await page.click('.seg >> text=כרטיסים');
-for (const k of ['סף', 'שורד ניטרול', 'הכול']) await page.click(`.seg >> text=${k}`);
+for (const k of ['נקודת מפנה', 'נשאר באזורים דומים', 'הכול']) await page.locator(`.seg button:has-text("${k}")`).first().click();
 await page.click('text=רק בין תחומים שונים');
 ok(page.url().includes('x=0'), 'cross-domain filter toggles');
 await page.click('.seg >> text=רובעים');
@@ -130,7 +130,7 @@ await page.click('.check >> text=צמתים');
 await page.waitForURL(/intersections/);
 await page.selectOption('#tgt', 'bld_coverage');
 await page.waitForURL(/t=bld_coverage/);
-ok(await page.locator('text=טיפולוגיות').isVisible(), 'explorer typologies');
+ok(await page.locator('text=סוגי אזורים בעיר').first().isVisible(), 'explorer area types');
 await page.screenshot({ path: `${SHOTS}/04-explorer.png`, fullPage: true });
 await page.click('.tabs >> text=מטריצה מלאה');
 await page.waitForSelector('[data-testid="matrix"] td', { timeout: 30000 });
@@ -145,13 +145,14 @@ ok(await page.locator('[data-testid="scatter"] circle').count() > 30, 'lab scatt
 ok(await page.locator('[data-testid="reliability"]').isVisible(), 'lab reliability index');
 ok(await page.locator('[data-testid="story"] .tone-insight mark.insight, [data-testid="story"] mark.insight').count() >= 1, 'lab story has a marked insight');
 ok(await page.locator('.explain').first().isVisible(), 'lab explanation sentence under the insight line');
+ok(await page.locator('.explain br').count() >= 1, 'every sentence starts on a new line');
 await page.selectOption('#vx', 'bld_coverage');
 await page.waitForURL(/x=bld_coverage/);
 await page.selectOption('#vc', 'dist_water');
-await page.waitForSelector('text=מתאם חלקי', { timeout: 20000 }).catch(() => {});
-ok(await page.locator('text=מתאם חלקי').first().isVisible(), 'lab partial correlation');
+await page.waitForSelector('text=כשמשווים רק מקומות עם', { timeout: 20000 }).catch(() => {});
+ok(await page.locator('text=כשמשווים רק מקומות עם').first().isVisible(), 'lab compares like with like');
 for (const u of ['רובעים', 'משושים קטנים', 'משושים גדולים']) { await page.click(`.side .seg >> text=${u}`); await page.waitForTimeout(300); }
-for (const m of ['אשכולות', 'משתנה X', 'משתנה Y', 'דו-משתני']) await page.click(`.mapbox .seg >> text=${m}`);
+for (const m of ['מוקדים חריגים', 'רק ', 'שתי השכבות יחד']) await page.locator(`.mapbox .seg button:has-text("${m}")`).first().click();
 await page.click('.mapbox .seg >> text=תלת-ממד');
 await page.waitForTimeout(1500);
 ok(page.url().includes('d=1'), 'lab 3D');
@@ -181,9 +182,29 @@ ok(true, 'twin scale switch');
 await page.waitForTimeout(2000);
 await page.screenshot({ path: `${SHOTS}/06-twin.png` });
 
+// ---------- act: rules of thumb ----------
+await go('/act', '[data-testid="thumbs"] article');
+ok(await page.locator('[data-testid="directive"]').count() >= 3, 'rules of thumb written as instructions');
+const firstDirective = await page.locator('[data-testid="directive"]').first().innerText();
+ok(/^(במקומות|לפני|בדקו|הוסיפו|צמצמו|כשמתכננים|אל)/.test(firstDirective.trim()), `a rule of thumb starts with an action (${firstDirective.slice(0, 30)})`);
+ok(await page.locator('[data-testid="next-step"]').isVisible(), 'every page ends with the next step');
+await page.waitForTimeout(600);
+const mAct = await misalign();
+ok(mAct <= 1, `rule cards on shared horizontal lines (${mAct}px)`);
+
+// ---------- plain language ----------
+for (const path of ['/lab', '/know', '/plan']) {
+  await go(path, path === '/lab' ? '[data-testid="story"]' : path === '/know' ? '[data-testid="discoveries"] article' : '[data-testid="rules"] article');
+  const text = await page.locator('main').innerText();
+  const jargon = ['משתנה X', 'משתנה Y', 'X ו-Y', 'תיקון מרחבי', 'אוטוקורלציה', 'ניטרול', 'מובהק'].filter(w => text.includes(w));
+  ok(jargon.length === 0, `${path}: no jargon (${jargon.join(', ')})`);
+}
+
 // ---------- learn ----------
 await go('/learn', '[data-testid="tours"] article');
 ok(await page.locator('[data-testid="tours"] article').count() === 4, 'four learning tours');
+const dupSteps = await page.evaluate(() => [...document.querySelectorAll('[data-testid="tours"] article')].some(a => { const t = [...a.querySelectorAll('[aria-label="התקדמות"] button')].map(b => b.textContent); return new Set(t).size !== t.length; }));
+ok(!dupSteps, 'no tour has two buttons with the same name');
 await page.waitForTimeout(800);
 const mLearn = await misalign();
 ok(mLearn <= 1, `tour cards on shared horizontal lines (${mLearn}px)`);
