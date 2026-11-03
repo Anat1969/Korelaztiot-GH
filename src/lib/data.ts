@@ -23,6 +23,7 @@ export interface Meta {
   landsat: { id: string; date: string; cloud: number };
   counts: Record<string, number>;
   units: Record<string, number>;
+  streets?: { source: string; received: string; segments: number; km: number; km_main: number; km_parking: number };
 }
 
 /** Public files resolve against the build base: '/' on Vercel, './' in the app/ build for raw.githack. */

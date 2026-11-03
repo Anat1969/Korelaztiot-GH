@@ -74,6 +74,7 @@ const TOPIC_OF: Record<string, string> = {
   lst: 'heat', lst_p90: 'heat', ndvi: 'green', green_cover: 'green', park_share: 'green', green_access: 'green',
   ndbi: 'built', bld_density: 'built', bld_coverage: 'built', bld_footprint: 'built',
   road_density: 'move', walk_density: 'move', intersections: 'move', bus_access: 'move', bus_density: 'move',
+  street_density: 'move', main_street_density: 'move', local_street_share: 'move',
   poi_density: 'service', food_density: 'service', retail_density: 'service', health_density: 'service',
   kinder_density: 'edu', kinder_access: 'edu', school_density: 'edu', early_density: 'edu',
   renewal_projects: 'plan', renewal_units: 'plan', plan_density: 'plan', shimur_count: 'plan',

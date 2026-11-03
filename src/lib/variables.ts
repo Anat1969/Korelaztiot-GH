@@ -29,6 +29,7 @@ const S2 = 'Sentinel-2 L2A, 10 מ\'';
 const LS = 'Landsat 9, ערוץ תרמי, 30 מ\'';
 const OV = 'Overture Maps';
 const MUNI = 'עיריית אשדוד, ASHDODMAP';
+const STREETS = 'שכבת הרחובות של עיריית אשדוד, 03.11.2026';
 
 export const VARIABLES: Variable[] = [
   { key: 'lst', name: 'טמפרטורת פני שטח', short: 'חום', unit: '°C', family: 'env', source: LS, about: 'ממוצע טמפרטורת פני השטח ביום קיץ בהיר, ביבשה בלבד. מדד מקובל לאי חום עירוני.', good: 'down', digits: 1 },
@@ -46,6 +47,9 @@ export const VARIABLES: Variable[] = [
   { key: 'road_density', name: 'צפיפות כבישים', short: 'כבישים', unit: 'ק"מ לקמ"ר', family: 'move', source: OV, about: 'אורך כבישים לקילומטר רבוע.', digits: 1 },
   { key: 'walk_density', name: 'רשת הליכה ואופניים', short: 'שבילים', unit: 'ק"מ לקמ"ר', family: 'move', source: OV, about: 'אורך מדרחובים, שבילי הולכי רגל ושבילי אופניים לקילומטר רבוע.', good: 'up', digits: 1 },
   { key: 'intersections', name: 'צמתים', short: 'צמתים', unit: 'לקמ"ר', family: 'move', source: OV, about: 'צמתים של שלוש זרועות ומעלה. מדד מקובל לקישוריות ולהליכתיות.', good: 'up', digits: 0 },
+  { key: 'street_density', name: 'רשת הרחובות העירונית', short: 'רחובות', unit: 'ק"מ לקמ"ר', family: 'move', source: STREETS, about: 'אורך צירי הרחובות של העירייה לקילומטר רבוע, בלי רצועות חניה ובלי כבישים בין-עירוניים.', digits: 1 },
+  { key: 'main_street_density', name: 'שדרות ורחובות ראשיים', short: 'רחובות ראשיים', unit: 'ק"מ לקמ"ר', family: 'move', source: STREETS, about: 'אורך השדרות והרחובות הראשיים (מידרג 1 ו-2) לקילומטר רבוע. משמעות המידרג נקראה לפי שמות הרחובות (הערכה).', digits: 1 },
+  { key: 'local_street_share', name: 'שיעור הרחובות המקומיים', short: 'רחובות מקומיים', unit: '%', family: 'move', source: STREETS, about: 'החלק של הרחובות המקומיים, השקטים, מתוך אורך הרחובות המסווגים. משמעות המידרג נקראה לפי שמות הרחובות (הערכה).', digits: 0 },
   { key: 'poi_density', name: 'עסקים ושירותים', short: 'עסקים', unit: 'לקמ"ר', family: 'service', source: OV, about: 'נקודות עניין פעילות (רמת ביטחון 0.5 ומעלה) לקילומטר רבוע.', good: 'up', digits: 0 },
   { key: 'food_density', name: 'מסעדות ובתי קפה', short: 'אוכל', unit: 'לקמ"ר', family: 'service', source: OV, about: 'עסקי מזון ומשקה לקילומטר רבוע.', good: 'up', digits: 0 },
   { key: 'retail_density', name: 'מסחר קמעונאי', short: 'מסחר', unit: 'לקמ"ר', family: 'service', source: OV, about: 'חנויות לקילומטר רבוע.', good: 'up', digits: 0 },

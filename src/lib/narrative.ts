@@ -83,7 +83,7 @@ function typicalStep(xKey: string): number {
 
 const stepScale: Record<string, number> = {
   lst: 1, lst_p90: 1, ndvi: 0.1, ndbi: 0.1, green_cover: 10, park_share: 10, bld_density: 100, bld_coverage: 10, bld_footprint: 100,
-  road_density: 5, walk_density: 5, intersections: 50, poi_density: 100, food_density: 20, retail_density: 20, health_density: 10,
+  road_density: 5, walk_density: 5, street_density: 5, main_street_density: 2, local_street_share: 10, intersections: 50, poi_density: 100, food_density: 20, retail_density: 20, health_density: 10,
   kinder_density: 10, school_density: 5, early_density: 5, renewal_projects: 1, renewal_units: 100, plan_density: 1000, shimur_count: 1,
   dist_water: 1, area: 1,
 };

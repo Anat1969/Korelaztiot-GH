@@ -327,3 +327,19 @@ table.sort tr.group td { background: var(--bg-2); font-weight: 600; font-family:
 .card { box-shadow: 0 1px 0 rgba(20, 26, 30, .05), 0 10px 26px -10px rgba(20, 26, 30, .22), 0 30px 60px -34px rgba(20, 26, 30, .28); }
 .toast { box-shadow: 0 12px 30px -8px rgba(0, 0, 0, .55); }
 .topbar { box-shadow: 0 1px 0 var(--line), 0 10px 26px -18px rgba(0, 0, 0, .45); }
+
+/* "What the street network reveals" (Know page): the municipal street layer read against every other layer */
+.street-finding { margin: 0 0 18px; border-inline-start: 4px solid #4a4f96; }
+.street-finding h4 { margin: 14px 0 4px; font-size: 14px; }
+.street-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.street-list { margin: 0; padding-inline-start: 20px; display: grid; gap: 12px; }
+.street-list li > b { font-size: 16px; }
+.street-kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 6px 0; }
+.street-kv .kv .v { font-size: 20px; }
+.street-kv .kv .v.small-v { font-size: 14px; font-family: inherit; }
+.street-checks { margin: 0; padding-inline-start: 20px; display: grid; gap: 4px; }
+@media (max-width: 720px) {
+  .street-grid { grid-template-columns: minmax(0, 1fr); }
+  .street-kv { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .street-kv .kv .v { font-size: 17px; }
+}
