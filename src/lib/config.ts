@@ -7,6 +7,8 @@ export const TRIVIAL = [
   ['renewal_projects', 'renewal_units'], ['bld_density', 'bld_coverage'], ['bus_access', 'bus_density'],
   ['green_access', 'park_share'], ['kinder_access', 'kinder_density', 'early_density'],
   ['green_access', 'kinder_access', 'bus_access'], // all three measure how compact a neighbourhood is
+  // the municipal street layer and the Overture road layer measure the same network; main and local streets are parts of it
+  ['street_density', 'road_density', 'main_street_density', 'local_street_share', 'intersections'],
 ];
 
 /** The "more city" index removed from every pair: built mass, streets, activity and where people live.

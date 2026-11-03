@@ -14,6 +14,7 @@ import { pairsOf, fr } from '../lib/stats';
 import { bivariateTopic, bivarPalette, topicOf } from '../lib/color';
 import Light, { levelOfScore } from '../components/Light';
 import SortTable from '../components/SortTable';
+import StreetFinding from '../components/StreetFinding';
 
 const Explorer = lazy(() => import('../components/Explorer'));
 const Matrix = lazy(() => import('./Matrix'));
@@ -72,6 +73,7 @@ function Auto({ sp, setSp }: { sp: URLSearchParams; setSp: (p: URLSearchParams, 
         <div className="seg" role="group" aria-label="תצוגה"><button aria-pressed={view !== 'table'} onClick={() => set('v', 'cards')}>כרטיסים</button><button aria-pressed={view === 'table'} onClick={() => set('v', 'table')}>טבלה ממוינת</button></div>
       </div>
       {kind !== 'all' && <p className="muted small" style={{ marginTop: -8 }}>{KIND_ABOUT[kind]}</p>}
+      {res && S && <StreetFinding res={res} S={S} scale={scale} />}
       {!res && <div className="card pad muted">סורק את כל הזוגות בשלושה קני מידה</div>}
       {res && !list.length && <div className="card pad">אין תגליות שעומדות בסף בבחירה הזו. נסו קנה מידה אחר או בטלו את הסינון.</div>}
       {view === 'cards' ? (

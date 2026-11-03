@@ -23,7 +23,7 @@ jobs:
           python scripts/fetch_overture.py "$REL"
           python scripts/fetch_rasters.py "$(date -u +%Y -d '-3 months')"
       - name: Build indicators
-        run: python scripts/build_data.py
+        run: python scripts/build_data.py && python scripts/add_streets.py
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
       - name: Check the app still builds and the statistics still match SciPy

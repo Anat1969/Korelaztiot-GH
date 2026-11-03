@@ -108,6 +108,12 @@ ok(mKnow <= 1, `discovery cards on shared horizontal lines (${mKnow}px)`);
 await page.screenshot({ path: `${SHOTS}/03-know.png` });
 ok(await page.locator('[data-testid="discoveries"] .mini-legend').count() >= 3, 'every discovery map has a legend');
 ok(await page.locator('[data-testid="discoveries"] .tl').count() >= 3, 'reliability as a traffic light');
+// the municipal street layer: a finding card computed by the engine, with a map legend and "how to read"
+const sf = page.locator('[data-testid="street-finding"]');
+ok(await sf.isVisible(), 'street network finding on the discovery page');
+ok((await sf.locator('.insight-line').innerText()).trim().length > 0, 'street finding has an insight line');
+ok(await sf.locator('.mini-legend').count() === 1 && (await sf.innerText()).includes('איך לקרוא'), 'street map with legend and how to read');
+ok(await sf.locator('svg path').count() > 20, 'street map drawn');
 ok(await page.locator('[data-testid="discoveries"] mark.insight').count() >= 3, 'insights in the yellow marker');
 ok(await page.locator('[data-testid="discoveries"] strong .num, [data-testid="discoveries"] .num').count() >= 6, 'numbers bold and isolated');
 await page.click('.seg >> text=טבלה ממוינת');
@@ -274,6 +280,14 @@ for (const path of ['/', '/measure', '/know', '/know?tab=pick', '/lab', '/plan',
   await mp.waitForTimeout(path === '/lab' || path === '/measure' ? 3500 : 1800);
   const over = await mp.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   ok(over <= 1, `mobile ${path}: no horizontal scroll (${over}px)`);
+  if (path === '/know') {
+    const sfm = mp.locator('[data-testid="street-finding"]');
+    await sfm.waitFor({ timeout: 20000 });
+    await sfm.scrollIntoViewIfNeeded();
+    await sfm.screenshot({ path: `${SHOTS}/m-know-streets.png` });
+    const sfOver = await mp.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    ok(sfOver <= 1, `mobile street finding: no horizontal scroll (${sfOver}px)`);
+  }
   if (['/', '/measure', '/know'].includes(path)) await mp.screenshot({ path: `${SHOTS}/m${path.replace(/\W/g, '-') || '-home'}.png` });
 }
 
